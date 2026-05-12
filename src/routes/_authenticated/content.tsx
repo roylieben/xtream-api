@@ -155,14 +155,14 @@ function Browser({ type }: { type: "live" | "vod" | "series" }) {
               <DialogTitle className="text-white drop-shadow-md">{previewItem.name}</DialogTitle>
             </DialogHeader>
             <div className="relative pt-[56.25%] w-full bg-black">
-              <video 
-                src={previewItem.url} 
+              <ReactPlayer 
+                url={previewItem.url} 
                 controls 
-                autoPlay
-                className="absolute inset-0 w-full h-full object-contain"
-              >
-                Your browser does not support HTML5 video.
-              </video>
+                playing
+                width="100%"
+                height="100%"
+                className="absolute inset-0"
+              />
             </div>
           </DialogContent>
         </Dialog>
