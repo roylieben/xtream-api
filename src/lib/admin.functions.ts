@@ -200,7 +200,7 @@ export const getContent = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     
     // Fetch categories to map the names
-    const catIds = [...new Set((rows ?? []).map((r) => r.category_id).filter(Boolean))];
+    const catIds = [...new Set((rows ?? []).map((r) => r.category_id).filter((id): id is string => typeof id === "string" && id.length > 0))];
     const { data: cats } = await supabaseAdmin
       .from("categories")
       .select("upstream_id,name")
