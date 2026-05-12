@@ -50,8 +50,31 @@ function SettingsPage() {
   });
 
   const testM = useMutation({
-    mutationFn: () => test(),
+    mutationFn: () =>
+      test({
+        data: {
+          xtream_host: form.xtream_host,
+          xtream_username: form.xtream_username,
+          xtream_password: form.xtream_password,
+        },
+      }),
     onSuccess: (r: any) => (r.ok ? toast.success("Upstream OK") : toast.error(`Upstream: ${r.error}`)),
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const saveUpstream = useMutation({
+    mutationFn: () =>
+      saveUp({
+        data: {
+          xtream_host: form.xtream_host,
+          xtream_username: form.xtream_username,
+          xtream_password: form.xtream_password,
+        },
+      }),
+    onSuccess: () => {
+      toast.success("Upstream saved");
+      qc.invalidateQueries({ queryKey: ["settings"] });
+    },
     onError: (e: any) => toast.error(e.message),
   });
 
