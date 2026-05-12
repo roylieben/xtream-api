@@ -43,13 +43,15 @@ function Browser({ type }: { type: "live" | "vod" | "series" }) {
           <label htmlFor={`show-enabled-cats-${type}`} className="text-sm cursor-pointer">Enabled only</label>
         </div>
         <div className="flex-1 overflow-y-auto space-y-1 pr-2">
-          <Button
-            variant={categoryId === "all" ? "secondary" : "ghost"}
-            className="w-full justify-start font-normal text-left h-auto py-2"
-            onClick={() => { setCategoryId("all"); setPage(1); }}
-          >
-            <div className="flex-1 truncate">All Categories</div>
-          </Button>
+          {!showEnabledCatsOnly && (
+            <Button
+              variant={categoryId === "all" ? "secondary" : "ghost"}
+              className="w-full justify-start font-normal text-left h-auto py-2"
+              onClick={() => { setCategoryId("all"); setPage(1); }}
+            >
+              <div className="flex-1 truncate">All Categories</div>
+            </Button>
+          )}
           {categories.map((c: any) => (
             <Button
               key={c.upstream_id}
