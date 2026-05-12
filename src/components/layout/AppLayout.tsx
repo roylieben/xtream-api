@@ -7,8 +7,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   const navItems = [
     { title: "Dashboard", href: "/", icon: Activity },
-    { title: "Providers", href: "/providers", icon: Server },
-    { title: "Clients", href: "/clients", icon: Users },
+    { title: "Content", href: "/content", icon: Tv },
+    { title: "Categories", href: "/categories", icon: Server },
     { title: "Settings", href: "/settings", icon: Settings },
   ];
 
