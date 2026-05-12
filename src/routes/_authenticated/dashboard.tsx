@@ -5,7 +5,7 @@ import { getStats, runSync, testConnection } from "@/lib/admin.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw, Tv, Film, Clapperboard, FolderTree, CheckCircle2, XCircle, Loader2, AlertTriangle } from "lucide-react";
+import { RefreshCw, Tv, Film, Clapperboard, FolderTree, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
@@ -91,29 +91,19 @@ function Dashboard() {
             ["live", "Live", data.settings?.last_sync_live_at, data.settings?.sync_interval_live_minutes],
             ["vod", "VOD", data.settings?.last_sync_vod_at, data.settings?.sync_interval_vod_minutes],
             ["series", "Series", data.settings?.last_sync_series_at, data.settings?.sync_interval_series_minutes],
-          ] as const).map(([key, label, last, mins]) => {
-            const cb = data.categoryBreakdown?.[key];
-            const hasDisabled = cb && cb.disabled > 0;
-            return (
-              <div key={key} className="rounded-md border border-border p-4 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="font-medium">{label}</div>
-                  <Badge variant="outline">every {mins}m</Badge>
-                </div>
-                <div className="text-xs text-muted-foreground">Last: {lastSync(last as any)}</div>
-                {hasDisabled && (
-                  <div className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-300">
-                    <AlertTriangle className="size-3.5 mt-0.5 shrink-0" />
-                    <span>{cb.disabled} of {cb.total} {label.toLowerCase()} categories disabled — re-sync to apply filtering.</span>
-                  </div>
-                )}
-                <Button size="sm" variant="secondary" className="w-full" onClick={() => sync.mutate(key)} disabled={sync.isPending}>
-                  <RefreshCw className={`size-3.5 ${sync.isPending && sync.variables === key ? "animate-spin" : ""}`} />
-                  Sync now
-                </Button>
+          ] as const).map(([key, label, last, mins]) => (
+            <div key={key} className="rounded-md border border-border p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="font-medium">{label}</div>
+                <Badge variant="outline">every {mins}m</Badge>
               </div>
-            );
-          })}
+              <div className="text-xs text-muted-foreground">Last: {lastSync(last as any)}</div>
+              <Button size="sm" variant="secondary" className="w-full" onClick={() => sync.mutate(key)} disabled={sync.isPending}>
+                <RefreshCw className={`size-3.5 ${sync.isPending && sync.variables === key ? "animate-spin" : ""}`} />
+                Sync now
+              </Button>
+            </div>
+          ))}
         </CardContent>
       </Card>
 

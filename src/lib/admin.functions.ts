@@ -146,27 +146,18 @@ export const getStats = createServerFn({ method: "GET" })
       const { count } = await supabaseAdmin.from(table).select("*", { count: "exact", head: true });
       return count ?? 0;
     };
-    const [live, vod, series, cats, runsRes, settings, catRows] = await Promise.all([
+    const [live, vod, series, cats, runsRes, settings] = await Promise.all([
       counts("live_streams"),
       counts("vod_streams"),
       counts("series"),
       counts("categories"),
       supabaseAdmin.from("sync_runs").select("*").order("started_at", { ascending: false }).limit(15),
       supabaseAdmin.from("app_settings").select("*").limit(1).single(),
-      supabaseAdmin.from("categories").select("type,enabled").limit(10000),
     ]);
-    const catBreakdown = { live: { total: 0, disabled: 0 }, vod: { total: 0, disabled: 0 }, series: { total: 0, disabled: 0 } };
-    for (const r of catRows.data ?? []) {
-      const t = r.type as "live" | "vod" | "series";
-      if (!catBreakdown[t]) continue;
-      catBreakdown[t].total += 1;
-      if (!r.enabled) catBreakdown[t].disabled += 1;
-    }
     return {
       counts: { live, vod, series, categories: cats },
       runs: runsRes.data ?? [],
       settings: settings.data,
-      categoryBreakdown: catBreakdown,
     };
   });
 
