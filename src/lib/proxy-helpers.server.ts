@@ -19,7 +19,7 @@ export function jsonResponse(body: unknown, status = 200) {
   });
 }
 
-export async function fetchAll(table: string, select: string = "*"): Promise<any[]> {
+export async function fetchAll(table: any, select: string = "*"): Promise<any[]> {
   let all: any[] = [];
   let from = 0;
   const limit = 1000;
