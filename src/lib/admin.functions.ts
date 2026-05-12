@@ -38,21 +38,54 @@ export const updateSettings = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+const upstreamSchema = z.object({
+  xtream_host: z.string().trim().min(1).max(500),
+  xtream_username: z.string().trim().min(1).max(200),
+  xtream_password: z.string().min(1).max(200),
+});
+
 export const testConnection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async () => {
-    const { data: s } = await supabaseAdmin.from("app_settings").select("*").limit(1).single();
-    if (!s?.xtream_host) throw new Error("Configure XTream host first");
+  .inputValidator((d: unknown) => {
+    // Allow empty payload → fall back to saved settings
+    if (!d || (typeof d === "object" && Object.keys(d as object).length === 0)) return null;
+    return upstreamSchema.parse(d);
+  })
+  .handler(async ({ data }) => {
+    let creds = data;
+    if (!creds) {
+      const { data: s } = await supabaseAdmin.from("app_settings").select("*").limit(1).single();
+      if (!s?.xtream_host) return { ok: false, error: "Configure XTream host first" };
+      creds = {
+        xtream_host: s.xtream_host,
+        xtream_username: s.xtream_username,
+        xtream_password: s.xtream_password,
+      };
+    }
     try {
       const info = await xtream.accountInfo({
-        host: s.xtream_host,
-        username: s.xtream_username,
-        password: s.xtream_password,
+        host: creds.xtream_host,
+        username: creds.xtream_username,
+        password: creds.xtream_password,
       });
       return { ok: true, info };
     } catch (e: any) {
       return { ok: false, error: e?.message ?? String(e) };
     }
+  });
+
+export const updateUpstream = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => upstreamSchema.parse(d))
+  .handler(async ({ data }) => {
+    const { data: row } = await supabaseAdmin.from("app_settings").select("id").limit(1).single();
+    if (!row) throw new Error("Settings row missing");
+    const { error } = await supabaseAdmin
+      .from("app_settings")
+      .update({ ...data, updated_at: new Date().toISOString() })
+      .eq("id", row.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });
 
 export const runSync = createServerFn({ method: "POST" })
