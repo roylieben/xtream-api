@@ -1,7 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { authProxy, getEnabledLiveStreamEpgIds } from "@/lib/proxy-helpers.server";
-import { XMLParser, XMLBuilder } from "fast-xml-parser";
-
 export const Route = createFileRoute("/api/public/xmltv.php")({
   server: {
     handlers: {
@@ -14,57 +12,41 @@ export const Route = createFileRoute("/api/public/xmltv.php")({
         const u = new URL(s.xtream_host.replace(/\/$/, "") + "/xmltv.php");
         u.searchParams.set("username", s.xtream_username);
         u.searchParams.set("password", s.xtream_password);
-        const upstream = await fetch(u.toString());
         
+        const upstream = await fetch(u.toString());
         if (!upstream.ok) return new Response("Upstream error", { status: upstream.status });
         
-        const xmlText = await upstream.text();
         const enabledIds = await getEnabledLiveStreamEpgIds();
         
-        const parser = new XMLParser({
-          ignoreAttributes: false,
-          processEntities: false,
-        });
-        const builder = new XMLBuilder({
-          ignoreAttributes: false,
-          format: true,
-          processEntities: false,
-        });
-        
-        try {
-          const parsed = parser.parse(xmlText);
-          if (parsed && parsed.tv) {
-            if (Array.isArray(parsed.tv.channel)) {
-              parsed.tv.channel = parsed.tv.channel.filter((ch: any) => enabledIds.has(String(ch["@_id"])));
-            } else if (parsed.tv.channel && !enabledIds.has(String(parsed.tv.channel["@_id"]))) {
-              delete parsed.tv.channel;
+        // Use HTMLRewriter to stream and filter the large XML to avoid memory limits
+        // @ts-ignore - HTMLRewriter is available in Cloudflare Workers and Bun
+        const rewriter = new (globalThis as any).HTMLRewriter()
+          .on("channel", {
+            element(element: any) {
+              const id = element.getAttribute("id");
+              if (id && !enabledIds.has(id)) {
+                element.remove();
+              }
             }
-            
-            if (Array.isArray(parsed.tv.programme)) {
-              parsed.tv.programme = parsed.tv.programme.filter((pr: any) => enabledIds.has(String(pr["@_channel"])));
-            } else if (parsed.tv.programme && !enabledIds.has(String(parsed.tv.programme["@_channel"]))) {
-              delete parsed.tv.programme;
+          })
+          .on("programme", {
+            element(element: any) {
+              const channel = element.getAttribute("channel");
+              if (channel && !enabledIds.has(channel)) {
+                element.remove();
+              }
             }
-          }
-          const finalXml = builder.build(parsed);
+          });
           
-          return new Response(finalXml, {
-            status: 200,
-            headers: {
-              "Content-Type": upstream.headers.get("content-type") ?? "application/xml",
-              "Access-Control-Allow-Origin": "*",
-            },
-          });
-        } catch (e) {
-          // Fallback if parsing fails
-          return new Response(xmlText, {
-            status: 200,
-            headers: {
-              "Content-Type": upstream.headers.get("content-type") ?? "application/xml",
-              "Access-Control-Allow-Origin": "*",
-            },
-          });
-        }
+        const transformed = rewriter.transform(upstream);
+        
+        return new Response(transformed.body, {
+          status: 200,
+          headers: {
+            "Content-Type": upstream.headers.get("content-type") ?? "application/xml",
+            "Access-Control-Allow-Origin": "*",
+          },
+        });
       },
     },
   },
