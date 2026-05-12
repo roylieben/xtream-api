@@ -114,7 +114,7 @@ function Browser({ type }: { type: "live" | "vod" | "series" }) {
                   {(data?.rows ?? []).length === 0 ? (
                     <tr><td colSpan={2} className="p-8 text-center text-muted-foreground">Nothing here yet.</td></tr>
                   ) : data!.rows.map((r: any) => {
-                    const ext = type === "live" ? "ts" : (r.container_extension || (type === "series" ? "mkv" : "mp4"));
+                    const ext = type === "live" ? "m3u8" : (r.container_extension || (type === "series" ? "mkv" : "mp4"));
                     const pUrl = settings ? `${window.location.protocol}//${window.location.host}/api/public/${type === "live" ? "live" : type === "vod" ? "movie" : "series"}/${encodeURIComponent(settings.proxy_username || "")}/${encodeURIComponent(settings.proxy_password || "")}/${r.upstream_id}.${ext}` : "";
                     
                     return (
