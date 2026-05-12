@@ -25,10 +25,10 @@ export const Route = createFileRoute("/api/public/get.php")({
           supabaseAdmin.from("categories").select("type,upstream_id,name"),
         ]);
         const catName = new Map<string, string>();
-        for (const c of cats ?? []) catName.set(`${c.type}:${c.upstream_id}`, c.name);
+        for (const c of cats ?? []) catName.set(`${c.type}:${c.upstream_id}`, c.name ?? "");
 
-        const u = encodeURIComponent(s.proxy_username);
-        const p = encodeURIComponent(s.proxy_password);
+        const u = encodeURIComponent(s.proxy_username ?? "");
+        const p = encodeURIComponent(s.proxy_password ?? "");
 
         let out = "#EXTM3U\n";
         for (const r of lives ?? []) {

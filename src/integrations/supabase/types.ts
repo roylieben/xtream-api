@@ -16,123 +16,179 @@ export type Database = {
     Tables: {
       app_settings: {
         Row: {
+          created_at: string | null
           id: string
           last_sync_live_at: string | null
           last_sync_series_at: string | null
           last_sync_vod_at: string | null
-          proxy_password: string
-          proxy_username: string
-          sync_interval_live_minutes: number
-          sync_interval_series_minutes: number
-          sync_interval_vod_minutes: number
-          updated_at: string
-          xtream_host: string
-          xtream_password: string
-          xtream_username: string
+          proxy_password: string | null
+          proxy_username: string | null
+          sync_interval_live_minutes: number | null
+          sync_interval_series_minutes: number | null
+          sync_interval_vod_minutes: number | null
+          updated_at: string | null
+          xtream_host: string | null
+          xtream_password: string | null
+          xtream_username: string | null
         }
         Insert: {
+          created_at?: string | null
           id?: string
           last_sync_live_at?: string | null
           last_sync_series_at?: string | null
           last_sync_vod_at?: string | null
-          proxy_password?: string
-          proxy_username?: string
-          sync_interval_live_minutes?: number
-          sync_interval_series_minutes?: number
-          sync_interval_vod_minutes?: number
-          updated_at?: string
-          xtream_host?: string
-          xtream_password?: string
-          xtream_username?: string
+          proxy_password?: string | null
+          proxy_username?: string | null
+          sync_interval_live_minutes?: number | null
+          sync_interval_series_minutes?: number | null
+          sync_interval_vod_minutes?: number | null
+          updated_at?: string | null
+          xtream_host?: string | null
+          xtream_password?: string | null
+          xtream_username?: string | null
         }
         Update: {
+          created_at?: string | null
           id?: string
           last_sync_live_at?: string | null
           last_sync_series_at?: string | null
           last_sync_vod_at?: string | null
-          proxy_password?: string
-          proxy_username?: string
-          sync_interval_live_minutes?: number
-          sync_interval_series_minutes?: number
-          sync_interval_vod_minutes?: number
-          updated_at?: string
-          xtream_host?: string
-          xtream_password?: string
-          xtream_username?: string
+          proxy_password?: string | null
+          proxy_username?: string | null
+          sync_interval_live_minutes?: number | null
+          sync_interval_series_minutes?: number | null
+          sync_interval_vod_minutes?: number | null
+          updated_at?: string | null
+          xtream_host?: string | null
+          xtream_password?: string | null
+          xtream_username?: string | null
         }
         Relationships: []
       }
       categories: {
         Row: {
-          enabled: boolean
+          enabled: boolean | null
           id: number
-          name: string
+          name: string | null
           parent_id: string | null
           type: string
           upstream_id: string
         }
         Insert: {
-          enabled?: boolean
+          enabled?: boolean | null
           id?: number
-          name: string
+          name?: string | null
           parent_id?: string | null
           type: string
           upstream_id: string
         }
         Update: {
-          enabled?: boolean
+          enabled?: boolean | null
           id?: number
-          name?: string
+          name?: string | null
           parent_id?: string | null
           type?: string
           upstream_id?: string
         }
         Relationships: []
       }
+      custom_categories: {
+        Row: {
+          created_at: string | null
+          enabled: boolean | null
+          id: number
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: number
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: number
+          name?: string
+        }
+        Relationships: []
+      }
+      custom_category_streams: {
+        Row: {
+          created_at: string | null
+          custom_category_id: number
+          id: number
+          stream_upstream_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          custom_category_id: number
+          id?: number
+          stream_upstream_id: string
+        }
+        Update: {
+          created_at?: string | null
+          custom_category_id?: number
+          id?: number
+          stream_upstream_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_category_streams_custom_category_id_fkey"
+            columns: ["custom_category_id"]
+            isOneToOne: false
+            referencedRelation: "custom_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       live_streams: {
         Row: {
           added: string | null
           category_id: string | null
+          created_at: string | null
           custom_sid: string | null
           direct_source: string | null
           epg_channel_id: string | null
           id: number
           name: string | null
-          num: number | null
+          num: string | null
           raw: Json | null
           stream_icon: string | null
-          tv_archive: number | null
-          tv_archive_duration: number | null
+          tv_archive: string | null
+          tv_archive_duration: string | null
           upstream_id: string
         }
         Insert: {
           added?: string | null
           category_id?: string | null
+          created_at?: string | null
           custom_sid?: string | null
           direct_source?: string | null
           epg_channel_id?: string | null
           id?: number
           name?: string | null
-          num?: number | null
+          num?: string | null
           raw?: Json | null
           stream_icon?: string | null
-          tv_archive?: number | null
-          tv_archive_duration?: number | null
+          tv_archive?: string | null
+          tv_archive_duration?: string | null
           upstream_id: string
         }
         Update: {
           added?: string | null
           category_id?: string | null
+          created_at?: string | null
           custom_sid?: string | null
           direct_source?: string | null
           epg_channel_id?: string | null
           id?: number
           name?: string | null
-          num?: number | null
+          num?: string | null
           raw?: Json | null
           stream_icon?: string | null
-          tv_archive?: number | null
-          tv_archive_duration?: number | null
+          tv_archive?: string | null
+          tv_archive_duration?: string | null
           upstream_id?: string
         }
         Relationships: []
@@ -142,12 +198,13 @@ export type Database = {
           cast_text: string | null
           category_id: string | null
           cover: string | null
+          created_at: string | null
           director: string | null
           genre: string | null
           id: number
           last_modified: string | null
           name: string | null
-          num: number | null
+          num: string | null
           plot: string | null
           rating: string | null
           raw: Json | null
@@ -158,12 +215,13 @@ export type Database = {
           cast_text?: string | null
           category_id?: string | null
           cover?: string | null
+          created_at?: string | null
           director?: string | null
           genre?: string | null
           id?: number
           last_modified?: string | null
           name?: string | null
-          num?: number | null
+          num?: string | null
           plot?: string | null
           rating?: string | null
           raw?: Json | null
@@ -174,12 +232,13 @@ export type Database = {
           cast_text?: string | null
           category_id?: string | null
           cover?: string | null
+          created_at?: string | null
           director?: string | null
           genre?: string | null
           id?: number
           last_modified?: string | null
           name?: string | null
-          num?: number | null
+          num?: string | null
           plot?: string | null
           rating?: string | null
           raw?: Json | null
@@ -190,22 +249,25 @@ export type Database = {
       }
       series_info: {
         Row: {
+          created_at: string | null
           episodes: Json | null
-          fetched_at: string
+          id: number
           info: Json | null
           seasons: Json | null
           series_id: string
         }
         Insert: {
+          created_at?: string | null
           episodes?: Json | null
-          fetched_at?: string
+          id?: number
           info?: Json | null
           seasons?: Json | null
           series_id: string
         }
         Update: {
+          created_at?: string | null
           episodes?: Json | null
-          fetched_at?: string
+          id?: number
           info?: Json | null
           seasons?: Json | null
           series_id?: string
@@ -218,7 +280,7 @@ export type Database = {
           id: number
           items_processed: number | null
           message: string | null
-          started_at: string
+          started_at: string | null
           status: string
           type: string
         }
@@ -227,7 +289,7 @@ export type Database = {
           id?: number
           items_processed?: number | null
           message?: string | null
-          started_at?: string
+          started_at?: string | null
           status: string
           type: string
         }
@@ -236,7 +298,7 @@ export type Database = {
           id?: number
           items_processed?: number | null
           message?: string | null
-          started_at?: string
+          started_at?: string | null
           status?: string
           type?: string
         }
@@ -244,19 +306,22 @@ export type Database = {
       }
       vod_info: {
         Row: {
-          fetched_at: string
+          created_at: string | null
+          id: number
           info: Json | null
           movie_data: Json | null
           vod_id: string
         }
         Insert: {
-          fetched_at?: string
+          created_at?: string | null
+          id?: number
           info?: Json | null
           movie_data?: Json | null
           vod_id: string
         }
         Update: {
-          fetched_at?: string
+          created_at?: string | null
+          id?: number
           info?: Json | null
           movie_data?: Json | null
           vod_id?: string
@@ -268,11 +333,12 @@ export type Database = {
           added: string | null
           category_id: string | null
           container_extension: string | null
+          created_at: string | null
           custom_sid: string | null
           direct_source: string | null
           id: number
           name: string | null
-          num: number | null
+          num: string | null
           rating: string | null
           raw: Json | null
           stream_icon: string | null
@@ -282,11 +348,12 @@ export type Database = {
           added?: string | null
           category_id?: string | null
           container_extension?: string | null
+          created_at?: string | null
           custom_sid?: string | null
           direct_source?: string | null
           id?: number
           name?: string | null
-          num?: number | null
+          num?: string | null
           rating?: string | null
           raw?: Json | null
           stream_icon?: string | null
@@ -296,11 +363,12 @@ export type Database = {
           added?: string | null
           category_id?: string | null
           container_extension?: string | null
+          created_at?: string | null
           custom_sid?: string | null
           direct_source?: string | null
           id?: number
           name?: string | null
-          num?: number | null
+          num?: string | null
           rating?: string | null
           raw?: Json | null
           stream_icon?: string | null
