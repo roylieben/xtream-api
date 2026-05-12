@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { authProxy, getEnabledLiveStreamIds } from "@/lib/proxy-helpers.server";
+import { authProxy, getEnabledLiveStreamEpgIds } from "@/lib/proxy-helpers.server";
 import { XMLParser, XMLBuilder } from "fast-xml-parser";
 
 export const Route = createFileRoute("/api/public/xmltv.php")({
