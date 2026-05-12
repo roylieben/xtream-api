@@ -13,6 +13,17 @@ export const getSettings = createServerFn({ method: "GET" })
     return data;
   });
 
+export const getPublicSettings = createServerFn({ method: "GET" })
+  .handler(async () => {
+    const { data, error } = await supabaseAdmin.from("app_settings").select("disable_signup").limit(1).maybeSingle();
+    if (error) throw new Error(error.message);
+    return { disable_signup: data?.disable_signup ?? false };
+  });
+    const { data, error } = await supabaseAdmin.from("app_settings").select("*").limit(1).single();
+    if (error) throw new Error(error.message);
+    return data;
+  });
+
 const settingsSchema = z.object({
   xtream_host: z.string().max(500),
   xtream_username: z.string().max(200),
