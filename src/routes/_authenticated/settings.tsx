@@ -183,13 +183,36 @@ function SettingsPage() {
             </div>
           ))}
         </CardContent>
+        <CardContent className="flex justify-end pt-0">
+          <Button onClick={() => save.mutate()} disabled={save.isPending}>
+            {save.isPending && <Loader2 className="size-4 animate-spin mr-2" />} Save sync intervals
+          </Button>
+        </CardContent>
       </Card>
 
-      <div className="flex justify-end gap-2">
-        <Button onClick={() => save.mutate()} disabled={save.isPending}>
-          {save.isPending && <Loader2 className="size-4 animate-spin" />} Save settings
-        </Button>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Security</CardTitle>
+          <CardDescription>Configure security and access settings.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <input 
+              type="checkbox" 
+              id="disable_signup" 
+              className="size-4 rounded border-gray-300"
+              checked={form.disable_signup} 
+              onChange={(e) => set("disable_signup", e.target.checked)} 
+            />
+            <Label htmlFor="disable_signup">Disable public admin creation (signup)</Label>
+          </div>
+          <div className="flex justify-end pt-2">
+            <Button onClick={() => save.mutate()} disabled={save.isPending}>
+              {save.isPending && <Loader2 className="size-4 animate-spin mr-2" />} Save security settings
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
