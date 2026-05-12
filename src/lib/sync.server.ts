@@ -12,7 +12,22 @@ export function credsFromSettings(s: { xtream_host?: string | null; xtream_usern
   return { host: s.xtream_host ?? "", username: s.xtream_username ?? "", password: s.xtream_password ?? "" };
 }
 
-async function logRun(type: string, fn: () => Promise<{ items: number; message?: string }>) {
+async function checkCancelled(id?: number) {
+  if (!id) return;
+  const { data } = await supabaseAdmin.from("sync_runs").select("status").eq("id", id).single();
+  if (data?.status !== "running") {
+    throw new Error("Sync was cancelled");
+  }
+}
+
+async function logRun(type: string, fn: (id: number) => Promise<{ items: number; message?: string }>) {
+  // Cancel any existing running syncs of this type
+  await supabaseAdmin
+    .from("sync_runs")
+    .update({ status: "error", message: "Cancelled by newer run", finished_at: new Date().toISOString() })
+    .eq("type", type)
+    .eq("status", "running");
+
   const { data: run } = await supabaseAdmin
     .from("sync_runs")
     .insert({ type, status: "running" })
@@ -20,7 +35,7 @@ async function logRun(type: string, fn: () => Promise<{ items: number; message?:
     .single();
   const id = run?.id;
   try {
-    const { items, message } = await fn();
+    const { items, message } = await fn(id);
     if (id)
       await supabaseAdmin
         .from("sync_runs")
@@ -28,11 +43,16 @@ async function logRun(type: string, fn: () => Promise<{ items: number; message?:
         .eq("id", id);
     return { ok: true, items, message };
   } catch (e: any) {
-    if (id)
-      await supabaseAdmin
-        .from("sync_runs")
-        .update({ status: "error", finished_at: new Date().toISOString(), message: e?.message ?? String(e) })
-        .eq("id", id);
+    if (id) {
+      // Check if it was already cancelled so we don't overwrite the cancelled message
+      const { data: current } = await supabaseAdmin.from("sync_runs").select("status, message").eq("id", id).single();
+      if (current?.status === "running") {
+        await supabaseAdmin
+          .from("sync_runs")
+          .update({ status: "error", finished_at: new Date().toISOString(), message: e?.message ?? String(e) })
+          .eq("id", id);
+      }
+    }
     throw e;
   }
 }
