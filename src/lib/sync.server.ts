@@ -80,10 +80,11 @@ function chunks<T>(arr: T[], n: number): T[][] {
 }
 
 export async function syncLive() {
-  return logRun("live", async () => {
+  return logRun("live", async (id) => {
     const s = await getSettingsRow();
     const c = credsFromSettings(s);
     const cats = await xtream.liveCategories(c);
+    await checkCancelled(id);
     await upsertCategories("live", cats);
     const list = await xtream.liveStreams(c);
     const rows = list.map((it: any) => ({
@@ -101,6 +102,7 @@ export async function syncLive() {
       raw: it,
     }));
     for (const part of chunks(rows, 500)) {
+      await checkCancelled(id);
       const { error } = await supabaseAdmin.from("live_streams").upsert(part, { onConflict: "upstream_id" });
       if (error) throw new Error(`live_streams upsert: ${error.message}`);
     }
