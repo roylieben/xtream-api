@@ -146,6 +146,26 @@ function Browser({ type }: { type: "live" | "vod" | "series" }) {
           <Button size="sm" variant="outline" disabled={page >= pages} onClick={() => setPage(page + 1)}><ChevronRight className="size-4" /></Button>
         </div>
       </div>
+      
+      {previewItem && (
+        <Dialog open={true} onOpenChange={(open) => { if (!open) setPreviewItem(null); }}>
+          <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black border-none">
+            <DialogHeader className="absolute top-0 inset-x-0 z-10 p-4 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
+              <DialogTitle className="text-white drop-shadow-md">{previewItem.name}</DialogTitle>
+            </DialogHeader>
+            <div className="relative pt-[56.25%] w-full bg-black">
+              <video 
+                src={previewItem.url} 
+                controls 
+                autoPlay
+                className="absolute inset-0 w-full h-full object-contain"
+              >
+                Your browser does not support HTML5 video.
+              </video>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
