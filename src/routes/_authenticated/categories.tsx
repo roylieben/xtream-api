@@ -21,6 +21,7 @@ function Section({ type }: { type: "live" | "vod" | "series" }) {
   const bulk = useServerFn(bulkSetCategories);
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
+  const [showEnabledOnly, setShowEnabledOnly] = useState(true);
 
   const { data, isLoading } = useQuery({
     queryKey: ["categories", type],
@@ -42,15 +43,22 @@ function Section({ type }: { type: "live" | "vod" | "series" }) {
     onError: (e: any) => toast.error(e.message),
   });
 
-  const filtered = (data ?? []).filter((c: any) => c.name.toLowerCase().includes(search.toLowerCase()));
+  const filtered = (data ?? []).filter((c: any) => {
+    if (showEnabledOnly && !c.enabled) return false;
+    return c.name.toLowerCase().includes(search.toLowerCase());
+  });
   const enabledCount = (data ?? []).filter((c: any) => c.enabled).length;
 
   if (isLoading) return <div className="p-6 text-muted-foreground"><Loader2 className="inline size-4 animate-spin" /> Loading…</div>;
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-4">
         <Input placeholder="Search categories…" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-xs" />
+        <div className="flex items-center gap-2">
+          <Switch id="show-enabled" checked={showEnabledOnly} onCheckedChange={setShowEnabledOnly} />
+          <label htmlFor="show-enabled" className="text-sm cursor-pointer">Show enabled only</label>
+        </div>
         <div className="text-xs text-muted-foreground">{enabledCount} of {data?.length ?? 0} enabled</div>
         <div className="ml-auto flex gap-2">
           <Button size="sm" variant="outline" onClick={() => bulkM.mutate(true)}>Enable all</Button>
@@ -63,7 +71,7 @@ function Section({ type }: { type: "live" | "vod" | "series" }) {
             <thead className="text-xs text-muted-foreground bg-muted/50 sticky top-0">
               <tr>
                 <th className="text-left p-3 font-medium">Category</th>
-                <th className="text-left p-3 font-medium w-32">Upstream ID</th>
+                <th className="text-left p-3 font-medium w-32">Streams</th>
                 <th className="text-right p-3 font-medium w-24">Enabled</th>
               </tr>
             </thead>
@@ -73,7 +81,7 @@ function Section({ type }: { type: "live" | "vod" | "series" }) {
               ) : filtered.map((c: any) => (
                 <tr key={c.id} className="border-t border-border">
                   <td className="p-3">{c.name}</td>
-                  <td className="p-3 font-mono text-xs text-muted-foreground">{c.upstream_id}</td>
+                  <td className="p-3 text-xs text-muted-foreground">{c.stream_count}</td>
                   <td className="p-3 text-right">
                     <Switch checked={c.enabled} onCheckedChange={(v) => toggle.mutate({ id: c.id, enabled: v })} />
                   </td>
