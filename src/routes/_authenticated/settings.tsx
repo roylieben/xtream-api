@@ -158,6 +158,11 @@ function SettingsPage() {
               </div>
             ))}
           </div>
+          <div className="flex justify-end pt-2">
+            <Button onClick={() => save.mutate()} disabled={save.isPending}>
+              {save.isPending && <Loader2 className="size-4 animate-spin mr-2" />} Save proxy settings
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
