@@ -10,33 +10,43 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicPlayer_apiPhpRouteImport } from './routes/api/public/player_api/php'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPlayer_apiPhpRoute = ApiPublicPlayer_apiPhpRouteImport.update({
+  id: '/api/public/player_api/php',
+  path: '/api/public/player_api/php',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/public/player_api/php': typeof ApiPublicPlayer_apiPhpRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/public/player_api/php': typeof ApiPublicPlayer_apiPhpRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/public/player_api/php': typeof ApiPublicPlayer_apiPhpRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/api/public/player_api/php'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/api/public/player_api/php'
+  id: '__root__' | '/' | '/api/public/player_api/php'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiPublicPlayer_apiPhpRoute: typeof ApiPublicPlayer_apiPhpRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,12 +58,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/player_api/php': {
+      id: '/api/public/player_api/php'
+      path: '/api/public/player_api/php'
+      fullPath: '/api/public/player_api/php'
+      preLoaderRoute: typeof ApiPublicPlayer_apiPhpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiPublicPlayer_apiPhpRoute: ApiPublicPlayer_apiPhpRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
