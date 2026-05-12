@@ -32,39 +32,37 @@ async function buildAccountInfo(s: any) {
 }
 
 async function listCategories(type: "live" | "vod" | "series") {
-  const { data } = await supabaseAdmin
-    .from("categories")
-    .select("upstream_id,name,parent_id,enabled")
-    .eq("type", type)
-    .eq("enabled", true)
-    .order("name");
-  return (data ?? []).map((c: any) => ({
-    category_id: c.upstream_id,
-    category_name: c.name,
-    parent_id: c.parent_id ?? 0,
-  }));
+  const data = await fetchAll("categories", "upstream_id,name,parent_id,enabled,type");
+  return data
+    .filter((c: any) => c.type === type && c.enabled)
+    .sort((a: any, b: any) => (a.name || "").localeCompare(b.name || ""))
+    .map((c: any) => ({
+      category_id: c.upstream_id,
+      category_name: c.name,
+      parent_id: c.parent_id ?? 0,
+    }));
 }
 
 async function listLive() {
   const enabled = await getEnabledCategoryIds("live");
-  const { data } = await supabaseAdmin.from("live_streams").select("*").limit(50000);
-  return (data ?? [])
+  const data = await fetchAll("live_streams", "*");
+  return data
     .filter((r: any) => r.category_id && enabled.has(String(r.category_id)))
     .map((r: any) => ({ ...(r.raw ?? {}), stream_id: Number(r.upstream_id) || r.upstream_id }));
 }
 
 async function listVod() {
   const enabled = await getEnabledCategoryIds("vod");
-  const { data } = await supabaseAdmin.from("vod_streams").select("*").limit(50000);
-  return (data ?? [])
+  const data = await fetchAll("vod_streams", "*");
+  return data
     .filter((r: any) => r.category_id && enabled.has(String(r.category_id)))
     .map((r: any) => ({ ...(r.raw ?? {}), stream_id: Number(r.upstream_id) || r.upstream_id }));
 }
 
 async function listSeries() {
   const enabled = await getEnabledCategoryIds("series");
-  const { data } = await supabaseAdmin.from("series").select("*").limit(50000);
-  return (data ?? [])
+  const data = await fetchAll("series", "*");
+  return data
     .filter((r: any) => r.category_id && enabled.has(String(r.category_id)))
     .map((r: any) => ({ ...(r.raw ?? {}), series_id: Number(r.upstream_id) || r.upstream_id }));
 }
