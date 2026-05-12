@@ -117,9 +117,12 @@ function SettingsPage() {
             <Label>Password</Label>
             <Input type="password" value={form.xtream_password} onChange={(e) => set("xtream_password", e.target.value)} />
           </div>
-          <div className="md:col-span-2 flex gap-2">
+          <div className="md:col-span-2 flex gap-2 justify-end">
             <Button variant="outline" onClick={() => testM.mutate()} disabled={testM.isPending}>
               {testM.isPending ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />} Test connection
+            </Button>
+            <Button onClick={() => saveUpstream.mutate()} disabled={saveUpstream.isPending}>
+              {saveUpstream.isPending && <Loader2 className="size-4 animate-spin" />} Save upstream
             </Button>
           </div>
         </CardContent>
