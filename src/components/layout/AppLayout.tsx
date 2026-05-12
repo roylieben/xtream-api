@@ -42,15 +42,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </SidebarMenu>
           </SidebarContent>
           <SidebarFooter className="p-4 border-t border-sidebar-border">
-            <div className="flex items-center gap-3">
+            <Link to="/profile" className="flex items-center gap-3 hover:bg-muted p-2 rounded-md transition-colors">
               <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center text-sm font-medium">
                 AD
               </div>
               <div className="flex flex-col">
                 <span className="text-sm font-medium leading-none">Admin</span>
-                <span className="text-xs text-muted-foreground mt-1">admin@xtream.local</span>
+                <span className="text-xs text-muted-foreground mt-1">Profile</span>
               </div>
-            </div>
+            </Link>
           </SidebarFooter>
           <SidebarRail />
         </Sidebar>
