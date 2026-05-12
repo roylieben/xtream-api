@@ -19,33 +19,52 @@ export function jsonResponse(body: unknown, status = 200) {
   });
 }
 
+export async function fetchAll(table: any, select: string = "*"): Promise<any[]> {
+  let all: any[] = [];
+  let from = 0;
+  const limit = 1000;
+  while (true) {
+    const { data } = await supabaseAdmin.from(table).select(select).range(from, from + limit - 1);
+    if (!data || data.length === 0) break;
+    all = all.concat(data);
+    if (data.length < limit) break;
+    from += limit;
+  }
+  return all;
+}
+
 export async function getEnabledCategoryIds(type: "live" | "vod" | "series"): Promise<Set<string>> {
-  const { data } = await supabaseAdmin
-    .from("categories")
-    .select("upstream_id,enabled")
-    .eq("type", type);
-  return new Set((data ?? []).filter((c: any) => c.enabled).map((c: any) => c.upstream_id));
+  const data = await fetchAll("categories", "upstream_id,enabled,type");
+  return new Set(data.filter((c: any) => c.type === type && c.enabled).map((c: any) => c.upstream_id));
 }
 
 export async function getEnabledLiveStreamIds(): Promise<Set<string>> {
   // Get all enabled categories for live streams
-  const { data: cats } = await supabaseAdmin
-    .from("categories")
-    .select("upstream_id")
-    .eq("type", "live")
-    .eq("enabled", true);
-  
-  const enabledCatIds = new Set((cats ?? []).map((c: any) => c.upstream_id));
+  const cats = await fetchAll("categories", "upstream_id,type,enabled");
+  const enabledCatIds = new Set(cats.filter((c: any) => c.type === "live" && c.enabled).map((c: any) => c.upstream_id));
 
   // Get all live streams
-  const { data: streams } = await supabaseAdmin
-    .from("live_streams")
-    .select("upstream_id, category_id");
+  const streams = await fetchAll("live_streams", "upstream_id,category_id");
     
   return new Set(
-    (streams ?? [])
+    streams
       .filter((s: any) => enabledCatIds.has(String(s.category_id)))
       .map((s: any) => String(s.upstream_id))
+  );
+}
+
+export async function getEnabledLiveStreamEpgIds(): Promise<Set<string>> {
+  // Get all enabled categories for live streams
+  const cats = await fetchAll("categories", "upstream_id,type,enabled");
+  const enabledCatIds = new Set(cats.filter((c: any) => c.type === "live" && c.enabled).map((c: any) => c.upstream_id));
+
+  // Get all live streams
+  const streams = await fetchAll("live_streams", "epg_channel_id,category_id");
+    
+  return new Set(
+    streams
+      .filter((s: any) => enabledCatIds.has(String(s.category_id)) && s.epg_channel_id)
+      .map((s: any) => String(s.epg_channel_id))
   );
 }
 
