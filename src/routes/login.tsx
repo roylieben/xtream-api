@@ -25,10 +25,12 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [disableSignup, setDisableSignup] = useState(false);
+  const [disableSignup, setDisableSignup] = useState(true);
 
   useEffect(() => {
-    fetchSettings().then(s => setDisableSignup(s.disable_signup)).catch(console.error);
+    fetchSettings()
+      .then((s) => setDisableSignup(s.disable_signup))
+      .catch(console.error);
   }, []);
 
   const submit = async (e: React.FormEvent) => {
@@ -68,11 +70,25 @@ function LoginPage() {
           <form className="space-y-4" onSubmit={submit}>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
+              <Input
+                id="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={mode === "signup" ? "new-password" : "current-password"} />
+              <Input
+                id="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete={mode === "signup" ? "new-password" : "current-password"}
+              />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "..." : mode === "signup" ? "Create admin" : "Sign in"}
