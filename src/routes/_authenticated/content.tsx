@@ -76,7 +76,7 @@ function Browser({ type }: { type: "live" | "vod" | "series" }) {
                   <tr key={r.id} className="border-t border-border">
                     <td className="p-3 font-mono text-xs text-muted-foreground">{r.upstream_id}</td>
                     <td className="p-3">{r.name}</td>
-                    <td className="p-3 font-mono text-xs text-muted-foreground">{r.category_id ?? "—"}</td>
+                    <td className="p-3 text-xs text-muted-foreground">{r.category_name ?? r.category_id ?? "—"}</td>
                   </tr>
                 ))}
               </tbody>
