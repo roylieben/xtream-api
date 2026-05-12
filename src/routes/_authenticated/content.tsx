@@ -156,7 +156,7 @@ function Browser({ type }: { type: "live" | "vod" | "series" }) {
             </DialogHeader>
             <div className="relative pt-[56.25%] w-full bg-black">
               <ReactPlayer 
-                url={previewItem.url} 
+                src={previewItem.url} 
                 controls 
                 playing
                 width="100%"
