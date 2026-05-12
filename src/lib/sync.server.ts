@@ -20,7 +20,7 @@ async function checkCancelled(id?: number) {
   }
 }
 
-async function logRun(type: string, fn: (id: number) => Promise<{ items: number; message?: string }>) {
+async function logRun(type: string, fn: (id?: number) => Promise<{ items: number; message?: string }>) {
   // Cancel any existing running syncs of this type
   await supabaseAdmin
     .from("sync_runs")
