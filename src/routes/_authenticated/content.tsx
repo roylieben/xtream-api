@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
+import ReactPlayer from "react-player";
 import { getContent, getCategories, getSettings } from "@/lib/admin.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -113,7 +114,7 @@ function Browser({ type }: { type: "live" | "vod" | "series" }) {
                   {(data?.rows ?? []).length === 0 ? (
                     <tr><td colSpan={2} className="p-8 text-center text-muted-foreground">Nothing here yet.</td></tr>
                   ) : data!.rows.map((r: any) => {
-                    const ext = type === "live" ? "ts" : (r.container_extension || (type === "series" ? "mkv" : "mp4"));
+                    const ext = type === "live" ? "m3u8" : (r.container_extension || (type === "series" ? "mkv" : "mp4"));
                     const pUrl = settings ? `${window.location.protocol}//${window.location.host}/api/public/${type === "live" ? "live" : type === "vod" ? "movie" : "series"}/${encodeURIComponent(settings.proxy_username || "")}/${encodeURIComponent(settings.proxy_password || "")}/${r.upstream_id}.${ext}` : "";
                     
                     return (
@@ -154,14 +155,14 @@ function Browser({ type }: { type: "live" | "vod" | "series" }) {
               <DialogTitle className="text-white drop-shadow-md">{previewItem.name}</DialogTitle>
             </DialogHeader>
             <div className="relative pt-[56.25%] w-full bg-black">
-              <video 
+              <ReactPlayer 
                 src={previewItem.url} 
                 controls 
-                autoPlay
-                className="absolute inset-0 w-full h-full object-contain"
-              >
-                Your browser does not support HTML5 video.
-              </video>
+                playing
+                width="100%"
+                height="100%"
+                className="absolute inset-0"
+              />
             </div>
           </DialogContent>
         </Dialog>
