@@ -1,6 +1,6 @@
 import { createStart, createMiddleware } from "@tanstack/react-start";
 
-import { renderErrorPage } from "./lib/error-page";
+
 
 const errorMiddleware = createMiddleware().server(async ({ next }) => {
   // Let all errors propagate so TanStack can serialize server-function errors
