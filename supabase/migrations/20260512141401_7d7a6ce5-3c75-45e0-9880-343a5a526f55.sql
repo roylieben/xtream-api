@@ -1,0 +1,1 @@
+ALTER TABLE public.app_settings ADD COLUMN disable_signup BOOLEAN NOT NULL DEFAULT false;

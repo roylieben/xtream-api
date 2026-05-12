@@ -1,5 +1,7 @@
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { useState, useEffect } from "react";
+import { getPublicSettings } from "@/lib/admin.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,10 +20,16 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
+  const fetchSettings = useServerFn(getPublicSettings);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [disableSignup, setDisableSignup] = useState(false);
+
+  useEffect(() => {
+    fetchSettings().then(s => setDisableSignup(s.disable_signup)).catch(console.error);
+  }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,13 +77,15 @@ function LoginPage() {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "..." : mode === "signup" ? "Create admin" : "Sign in"}
             </Button>
-            <button
-              type="button"
-              className="w-full text-xs text-muted-foreground hover:text-foreground"
-              onClick={() => setMode(mode === "signup" ? "signin" : "signup")}
-            >
-              {mode === "signup" ? "Already have an admin account? Sign in" : "First time? Create the admin account"}
-            </button>
+            {!disableSignup && (
+              <button
+                type="button"
+                className="w-full text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => setMode(mode === "signup" ? "signin" : "signup")}
+              >
+                {mode === "signup" ? "Already have an admin account? Sign in" : "First time? Create the admin account"}
+              </button>
+            )}
           </form>
         </CardContent>
       </Card>
