@@ -20,10 +20,16 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
+  const fetchSettings = useServerFn(getPublicSettings);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [disableSignup, setDisableSignup] = useState(false);
+
+  useEffect(() => {
+    fetchSettings().then(s => setDisableSignup(s.disable_signup)).catch(console.error);
+  }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
