@@ -110,7 +110,22 @@ export const getCategories = createServerFn({ method: "GET" })
       .order("name", { ascending: true })
       .limit(5000);
     if (error) throw new Error(error.message);
-    return rows ?? [];
+
+    const table = data.type === "live" ? "live_streams" : data.type === "vod" ? "vod_streams" : "series";
+    const { data: streams } = await supabaseAdmin.from(table).select("category_id");
+    const counts: Record<string, number> = {};
+    if (streams) {
+      for (const s of streams) {
+        if (s.category_id) {
+          counts[s.category_id] = (counts[s.category_id] || 0) + 1;
+        }
+      }
+    }
+
+    return (rows ?? []).map(r => ({
+      ...r,
+      stream_count: counts[r.upstream_id] || 0
+    }));
   });
 
 export const setCategoryEnabled = createServerFn({ method: "POST" })
