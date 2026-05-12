@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { getSettings, updateSettings, testConnection } from "@/lib/admin.functions";
+import { getSettings, updateSettings, testConnection, updateUpstream } from "@/lib/admin.functions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +17,7 @@ export const Route = createFileRoute("/_authenticated/settings")({
 function SettingsPage() {
   const fetchSettings = useServerFn(getSettings);
   const update = useServerFn(updateSettings);
+  const saveUp = useServerFn(updateUpstream);
   const test = useServerFn(testConnection);
   const qc = useQueryClient();
 
@@ -49,8 +50,31 @@ function SettingsPage() {
   });
 
   const testM = useMutation({
-    mutationFn: () => test(),
+    mutationFn: () =>
+      test({
+        data: {
+          xtream_host: form.xtream_host,
+          xtream_username: form.xtream_username,
+          xtream_password: form.xtream_password,
+        },
+      }),
     onSuccess: (r: any) => (r.ok ? toast.success("Upstream OK") : toast.error(`Upstream: ${r.error}`)),
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const saveUpstream = useMutation({
+    mutationFn: () =>
+      saveUp({
+        data: {
+          xtream_host: form.xtream_host,
+          xtream_username: form.xtream_username,
+          xtream_password: form.xtream_password,
+        },
+      }),
+    onSuccess: () => {
+      toast.success("Upstream saved");
+      qc.invalidateQueries({ queryKey: ["settings"] });
+    },
     onError: (e: any) => toast.error(e.message),
   });
 
@@ -93,9 +117,12 @@ function SettingsPage() {
             <Label>Password</Label>
             <Input type="password" value={form.xtream_password} onChange={(e) => set("xtream_password", e.target.value)} />
           </div>
-          <div className="md:col-span-2 flex gap-2">
+          <div className="md:col-span-2 flex gap-2 justify-end">
             <Button variant="outline" onClick={() => testM.mutate()} disabled={testM.isPending}>
               {testM.isPending ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />} Test connection
+            </Button>
+            <Button onClick={() => saveUpstream.mutate()} disabled={saveUpstream.isPending}>
+              {saveUpstream.isPending && <Loader2 className="size-4 animate-spin" />} Save upstream
             </Button>
           </div>
         </CardContent>
