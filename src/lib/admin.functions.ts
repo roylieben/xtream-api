@@ -140,7 +140,10 @@ export const getContent = createServerFn({ method: "GET" })
       .parse(d),
   )
   .handler(async ({ data }) => {
-    const table = data.type === "live" ? "live_streams" : data.type === "vod" ? "vod_streams" : "series";
+    const table = (data.type === "live" ? "live_streams" : data.type === "vod" ? "vod_streams" : "series") as
+      | "live_streams"
+      | "vod_streams"
+      | "series";
     const page = data.page ?? 1;
     const pageSize = 50;
     let q = supabaseAdmin
