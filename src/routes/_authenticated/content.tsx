@@ -16,11 +16,19 @@ export const Route = createFileRoute("/_authenticated/content")({
 
 function Browser({ type }: { type: "live" | "vod" | "series" }) {
   const fetchContent = useServerFn(getContent);
+  const fetchCats = useServerFn(getCategories);
   const [search, setSearch] = useState("");
+  const [categoryId, setCategoryId] = useState<string>("all");
   const [page, setPage] = useState(1);
+  
+  const { data: categories } = useQuery({
+    queryKey: ["categories", type],
+    queryFn: () => fetchCats({ data: { type } }),
+  });
+  
   const { data, isLoading } = useQuery({
-    queryKey: ["content", type, search, page],
-    queryFn: () => fetchContent({ data: { type, search: search || undefined, page } }),
+    queryKey: ["content", type, search, categoryId, page],
+    queryFn: () => fetchContent({ data: { type, search: search || undefined, categoryId: categoryId === "all" ? undefined : categoryId, page } }),
   });
   const pages = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1;
 
@@ -33,6 +41,17 @@ function Browser({ type }: { type: "live" | "vod" | "series" }) {
           onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           className="max-w-sm"
         />
+        <Select value={categoryId} onValueChange={(v) => { setCategoryId(v); setPage(1); }}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="All Categories" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            {categories?.map((c: any) => (
+              <SelectItem key={c.upstream_id} value={c.upstream_id}>{c.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <div className="text-xs text-muted-foreground ml-auto">
           {data?.total ?? 0} items
         </div>
