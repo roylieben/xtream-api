@@ -250,7 +250,7 @@ export const getContent = createServerFn({ method: "GET" })
     // If we can't join directly, we can fetch the categories separately.
     let q = supabaseAdmin
       .from(table)
-      .select("id,upstream_id,name,category_id", { count: "exact" })
+      .select("*", { count: "exact" })
       .order("name", { ascending: true })
       .range((page - 1) * pageSize, page * pageSize - 1);
       

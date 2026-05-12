@@ -1,14 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { getContent, getCategories } from "@/lib/admin.functions";
+import { useState, useEffect } from "react";
+import { getContent, getCategories, getSettings } from "@/lib/admin.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Loader2, ChevronLeft, ChevronRight, Play } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/content")({
   component: ContentPage,
@@ -17,17 +18,34 @@ export const Route = createFileRoute("/_authenticated/content")({
 function Browser({ type }: { type: "live" | "vod" | "series" }) {
   const fetchContent = useServerFn(getContent);
   const fetchCats = useServerFn(getCategories);
+  const fetchSettings = useServerFn(getSettings);
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState<string>("all");
   const [page, setPage] = useState(1);
   const [showEnabledCatsOnly, setShowEnabledCatsOnly] = useState(true);
+  const [previewItem, setPreviewItem] = useState<{ name: string; url: string } | null>(null);
   
   const { data: allCategories } = useQuery({
     queryKey: ["categories", type],
     queryFn: () => fetchCats({ data: { type } }),
   });
   
+  const { data: settings } = useQuery({
+    queryKey: ["settings"],
+    queryFn: () => fetchSettings(),
+  });
+  
   const categories = (allCategories ?? []).filter((c: any) => showEnabledCatsOnly ? c.enabled : true);
+  
+  useEffect(() => {
+    if (showEnabledCatsOnly && categoryId === "all" && categories.length > 0) {
+      setCategoryId(categories[0].upstream_id);
+      setPage(1);
+    } else if (!showEnabledCatsOnly && categoryId !== "all" && categories.length > 0 && !categories.some((c: any) => c.upstream_id === categoryId)) {
+      setCategoryId("all");
+      setPage(1);
+    }
+  }, [showEnabledCatsOnly, categories, categoryId]);
   
   const { data, isLoading } = useQuery({
     queryKey: ["content", type, search, categoryId, page],
@@ -88,16 +106,34 @@ function Browser({ type }: { type: "live" | "vod" | "series" }) {
                 <thead className="text-xs text-muted-foreground bg-muted/50 sticky top-0">
                   <tr>
                     <th className="text-left p-3 font-medium">Name</th>
+                    <th className="text-right p-3 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {(data?.rows ?? []).length === 0 ? (
-                    <tr><td className="p-8 text-center text-muted-foreground">Nothing here yet.</td></tr>
-                  ) : data!.rows.map((r: any) => (
-                    <tr key={r.id} className="border-t border-border hover:bg-muted/50">
-                      <td className="p-3">{r.name}</td>
-                    </tr>
-                  ))}
+                    <tr><td colSpan={2} className="p-8 text-center text-muted-foreground">Nothing here yet.</td></tr>
+                  ) : data!.rows.map((r: any) => {
+                    const ext = type === "live" ? "ts" : (r.container_extension || (type === "series" ? "mkv" : "mp4"));
+                    const pUrl = settings ? `${window.location.protocol}//${window.location.host}/api/public/${type === "live" ? "live" : type === "vod" ? "movie" : "series"}/${encodeURIComponent(settings.proxy_username || "")}/${encodeURIComponent(settings.proxy_password || "")}/${r.upstream_id}.${ext}` : "";
+                    
+                    return (
+                      <tr key={r.id} className="border-t border-border hover:bg-muted/50 group">
+                        <td className="p-3">{r.name}</td>
+                        <td className="p-3 text-right">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => setPreviewItem({ name: r.name, url: pUrl })}
+                            disabled={!settings}
+                          >
+                            <Play className="size-4 mr-2" />
+                            Preview
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             )}
@@ -110,6 +146,26 @@ function Browser({ type }: { type: "live" | "vod" | "series" }) {
           <Button size="sm" variant="outline" disabled={page >= pages} onClick={() => setPage(page + 1)}><ChevronRight className="size-4" /></Button>
         </div>
       </div>
+      
+      {previewItem && (
+        <Dialog open={true} onOpenChange={(open) => { if (!open) setPreviewItem(null); }}>
+          <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black border-none">
+            <DialogHeader className="absolute top-0 inset-x-0 z-10 p-4 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
+              <DialogTitle className="text-white drop-shadow-md">{previewItem.name}</DialogTitle>
+            </DialogHeader>
+            <div className="relative pt-[56.25%] w-full bg-black">
+              <video 
+                src={previewItem.url} 
+                controls 
+                autoPlay
+                className="absolute inset-0 w-full h-full object-contain"
+              >
+                Your browser does not support HTML5 video.
+              </video>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
