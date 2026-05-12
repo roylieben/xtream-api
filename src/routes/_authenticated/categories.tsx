@@ -21,6 +21,7 @@ function Section({ type }: { type: "live" | "vod" | "series" }) {
   const bulk = useServerFn(bulkSetCategories);
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
+  const [showEnabledOnly, setShowEnabledOnly] = useState(true);
 
   const { data, isLoading } = useQuery({
     queryKey: ["categories", type],
@@ -42,15 +43,22 @@ function Section({ type }: { type: "live" | "vod" | "series" }) {
     onError: (e: any) => toast.error(e.message),
   });
 
-  const filtered = (data ?? []).filter((c: any) => c.name.toLowerCase().includes(search.toLowerCase()));
+  const filtered = (data ?? []).filter((c: any) => {
+    if (showEnabledOnly && !c.enabled) return false;
+    return c.name.toLowerCase().includes(search.toLowerCase());
+  });
   const enabledCount = (data ?? []).filter((c: any) => c.enabled).length;
 
   if (isLoading) return <div className="p-6 text-muted-foreground"><Loader2 className="inline size-4 animate-spin" /> Loading…</div>;
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-4">
         <Input placeholder="Search categories…" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-xs" />
+        <div className="flex items-center gap-2">
+          <Switch id="show-enabled" checked={showEnabledOnly} onCheckedChange={setShowEnabledOnly} />
+          <label htmlFor="show-enabled" className="text-sm cursor-pointer">Show enabled only</label>
+        </div>
         <div className="text-xs text-muted-foreground">{enabledCount} of {data?.length ?? 0} enabled</div>
         <div className="ml-auto flex gap-2">
           <Button size="sm" variant="outline" onClick={() => bulkM.mutate(true)}>Enable all</Button>
