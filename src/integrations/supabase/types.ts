@@ -17,6 +17,7 @@ export type Database = {
       app_settings: {
         Row: {
           created_at: string | null
+          disable_signup: boolean
           id: string
           last_sync_live_at: string | null
           last_sync_series_at: string | null
@@ -33,6 +34,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          disable_signup?: boolean
           id?: string
           last_sync_live_at?: string | null
           last_sync_series_at?: string | null
@@ -49,6 +51,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          disable_signup?: boolean
           id?: string
           last_sync_live_at?: string | null
           last_sync_series_at?: string | null
