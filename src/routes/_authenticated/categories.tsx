@@ -71,7 +71,7 @@ function Section({ type }: { type: "live" | "vod" | "series" }) {
             <thead className="text-xs text-muted-foreground bg-muted/50 sticky top-0">
               <tr>
                 <th className="text-left p-3 font-medium">Category</th>
-                <th className="text-left p-3 font-medium w-32">Upstream ID</th>
+                <th className="text-left p-3 font-medium w-32">Streams</th>
                 <th className="text-right p-3 font-medium w-24">Enabled</th>
               </tr>
             </thead>
@@ -81,7 +81,7 @@ function Section({ type }: { type: "live" | "vod" | "series" }) {
               ) : filtered.map((c: any) => (
                 <tr key={c.id} className="border-t border-border">
                   <td className="p-3">{c.name}</td>
-                  <td className="p-3 font-mono text-xs text-muted-foreground">{c.upstream_id}</td>
+                  <td className="p-3 text-xs text-muted-foreground">{c.stream_count}</td>
                   <td className="p-3 text-right">
                     <Switch checked={c.enabled} onCheckedChange={(v) => toggle.mutate({ id: c.id, enabled: v })} />
                   </td>
