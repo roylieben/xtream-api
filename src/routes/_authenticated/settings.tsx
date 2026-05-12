@@ -17,6 +17,7 @@ export const Route = createFileRoute("/_authenticated/settings")({
 function SettingsPage() {
   const fetchSettings = useServerFn(getSettings);
   const update = useServerFn(updateSettings);
+  const saveUp = useServerFn(updateUpstream);
   const test = useServerFn(testConnection);
   const qc = useQueryClient();
 
