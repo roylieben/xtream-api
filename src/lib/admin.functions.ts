@@ -107,6 +107,26 @@ export const runSync = createServerFn({ method: "POST" })
     return syncSeries({ withInfo: data.withInfo ?? true });
   });
 
+export const cancelSync = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ id: z.number().int().optional() }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    let q = supabaseAdmin
+      .from("sync_runs")
+      .update({ status: "error", message: "Cancelled by user", finished_at: new Date().toISOString() })
+      .eq("status", "running");
+      
+    if (data.id) {
+      q = q.eq("id", data.id);
+    }
+    
+    const { error } = await q;
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 export const getCategories = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ type: z.enum(["live", "vod", "series"]) }).parse(d))
