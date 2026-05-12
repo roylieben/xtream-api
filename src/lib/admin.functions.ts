@@ -168,6 +168,7 @@ export const getContent = createServerFn({ method: "GET" })
       .object({
         type: z.enum(["live", "vod", "series"]),
         search: z.string().max(200).optional(),
+        categoryId: z.string().optional(),
         page: z.number().int().min(1).max(10000).optional(),
       })
       .parse(d),
@@ -179,13 +180,39 @@ export const getContent = createServerFn({ method: "GET" })
       | "series";
     const page = data.page ?? 1;
     const pageSize = 50;
+    
+    // Use categories!inner or left join to get category name.
+    // Assuming a foreign key exists from table.category_id -> categories.upstream_id
+    // But Supabase join syntax needs the actual relationship.
+    // If it's not explicitly defined in the database schema, it might fail.
+    // Wait! Let's just do a separate query or see if we can do an inner join.
+    // If we can't join directly, we can fetch the categories separately.
     let q = supabaseAdmin
       .from(table)
       .select("id,upstream_id,name,category_id", { count: "exact" })
       .order("name", { ascending: true })
       .range((page - 1) * pageSize, page * pageSize - 1);
+      
     if (data.search) q = q.ilike("name", `%${data.search}%`);
+    if (data.categoryId && data.categoryId !== "all") q = q.eq("category_id", data.categoryId);
+    
     const { data: rows, count, error } = await q;
     if (error) throw new Error(error.message);
-    return { rows: rows ?? [], total: count ?? 0, page, pageSize };
+    
+    // Fetch categories to map the names
+    const catIds = [...new Set((rows ?? []).map((r) => r.category_id).filter((id): id is string => typeof id === "string" && id.length > 0))];
+    const { data: cats } = await supabaseAdmin
+      .from("categories")
+      .select("upstream_id,name")
+      .eq("type", data.type)
+      .in("upstream_id", catIds);
+      
+    const catMap = new Map((cats ?? []).map((c: any) => [c.upstream_id, c.name]));
+    
+    const mappedRows = (rows ?? []).map((r: any) => ({
+      ...r,
+      category_name: catMap.get(r.category_id) ?? r.category_id,
+    }));
+    
+    return { rows: mappedRows, total: count ?? 0, page, pageSize };
   });
