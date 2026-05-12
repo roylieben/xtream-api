@@ -170,10 +170,11 @@ export async function syncVod(opts: { withInfo?: boolean } = {}) {
 }
 
 export async function syncSeries(opts: { withInfo?: boolean } = {}) {
-  return logRun("series", async () => {
+  return logRun("series", async (id) => {
     const s = await getSettingsRow();
     const c = credsFromSettings(s);
     const cats = await xtream.seriesCategories(c);
+    await checkCancelled(id);
     await upsertCategories("series", cats);
     const list = await xtream.series(c);
     const rows = list.map((it: any) => ({
@@ -192,6 +193,7 @@ export async function syncSeries(opts: { withInfo?: boolean } = {}) {
       raw: it,
     }));
     for (const part of chunks(rows, 500)) {
+      await checkCancelled(id);
       const { error } = await supabaseAdmin.from("series").upsert(part, { onConflict: "upstream_id" });
       if (error) throw new Error(`series upsert: ${error.message}`);
     }
@@ -203,6 +205,7 @@ export async function syncSeries(opts: { withInfo?: boolean } = {}) {
       const missing = ids.filter((id) => !have.has(id));
       const conc = 4;
       for (let i = 0; i < missing.length; i += conc) {
+        await checkCancelled(id);
         const batch = missing.slice(i, i + conc);
         const results = await Promise.allSettled(batch.map((id) => xtream.seriesInfo(c, id)));
         const upserts = results
