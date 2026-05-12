@@ -92,6 +92,56 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_categories: {
+        Row: {
+          created_at: string | null
+          enabled: boolean | null
+          id: number
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: number
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: number
+          name?: string
+        }
+        Relationships: []
+      }
+      custom_category_streams: {
+        Row: {
+          created_at: string | null
+          custom_category_id: number
+          id: number
+          stream_upstream_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          custom_category_id: number
+          id?: number
+          stream_upstream_id: string
+        }
+        Update: {
+          created_at?: string | null
+          custom_category_id?: number
+          id?: number
+          stream_upstream_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_category_streams_custom_category_id_fkey"
+            columns: ["custom_category_id"]
+            isOneToOne: false
+            referencedRelation: "custom_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       live_streams: {
         Row: {
           added: string | null
