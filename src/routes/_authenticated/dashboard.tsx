@@ -57,6 +57,15 @@ function Dashboard() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const cancelRun = useMutation({
+    mutationFn: (id: number) => cancelSync({ data: { id } }),
+    onSuccess: () => {
+      toast.success("Sync cancelled");
+      qc.invalidateQueries({ queryKey: ["stats"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   if (isLoading || !data) {
     return <div className="p-8 text-muted-foreground"><Loader2 className="inline size-4 animate-spin" /> Loading…</div>;
   }
