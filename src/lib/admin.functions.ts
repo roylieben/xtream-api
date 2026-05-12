@@ -216,3 +216,102 @@ export const getContent = createServerFn({ method: "GET" })
     
     return { rows: mappedRows, total: count ?? 0, page, pageSize };
   });
+
+export const getCustomCategories = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async () => {
+    const { data, error } = await supabaseAdmin
+      .from("custom_categories")
+      .select("id, name, enabled")
+      .order("name", { ascending: true });
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+export const createCustomCategory = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ name: z.string().min(1).max(200) }).parse(d))
+  .handler(async ({ data }) => {
+    const { data: row, error } = await supabaseAdmin
+      .from("custom_categories")
+      .insert({ name: data.name })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    return { ok: true, id: row?.id };
+  });
+
+export const deleteCustomCategory = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.number().int() }).parse(d))
+  .handler(async ({ data }) => {
+    const { error } = await supabaseAdmin.from("custom_categories").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const setCustomCategoryEnabled = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.number().int(), enabled: z.boolean() }).parse(d))
+  .handler(async ({ data }) => {
+    const { error } = await supabaseAdmin
+      .from("custom_categories")
+      .update({ enabled: data.enabled })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const addStreamsToCustomCategory = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ categoryId: z.number().int(), streamIds: z.array(z.string()) }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    const rows = data.streamIds.map((id) => ({
+      custom_category_id: data.categoryId,
+      stream_upstream_id: id,
+    }));
+    const { error } = await supabaseAdmin
+      .from("custom_category_streams")
+      .upsert(rows, { onConflict: "custom_category_id,stream_upstream_id" });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const removeStreamFromCustomCategory = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ categoryId: z.number().int(), streamId: z.string() }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    const { error } = await supabaseAdmin
+      .from("custom_category_streams")
+      .delete()
+      .eq("custom_category_id", data.categoryId)
+      .eq("stream_upstream_id", data.streamId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const getCustomCategoryStreams = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ categoryId: z.number().int() }).parse(d))
+  .handler(async ({ data }) => {
+    const { data: relations, error: relError } = await supabaseAdmin
+      .from("custom_category_streams")
+      .select("stream_upstream_id")
+      .eq("custom_category_id", data.categoryId);
+    if (relError) throw new Error(relError.message);
+    
+    if (!relations || relations.length === 0) return [];
+    
+    const streamIds = relations.map((r: any) => r.stream_upstream_id);
+    const { data: streams, error: streamsError } = await supabaseAdmin
+      .from("live_streams")
+      .select("id, upstream_id, name, stream_icon, category_id")
+      .in("upstream_id", streamIds);
+      
+    if (streamsError) throw new Error(streamsError.message);
+    return streams ?? [];
+  });
