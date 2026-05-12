@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { authProxy, getEnabledCategoryIds, jsonResponse } from "@/lib/proxy-helpers.server";
+import { authProxy, getEnabledCategoryIds, jsonResponse, fetchAll } from "@/lib/proxy-helpers.server";
 import { maybeRunDueSyncs } from "@/lib/sync.server";
 
 async function buildAccountInfo(s: any) {
