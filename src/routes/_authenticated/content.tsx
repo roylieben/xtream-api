@@ -106,16 +106,34 @@ function Browser({ type }: { type: "live" | "vod" | "series" }) {
                 <thead className="text-xs text-muted-foreground bg-muted/50 sticky top-0">
                   <tr>
                     <th className="text-left p-3 font-medium">Name</th>
+                    <th className="text-right p-3 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {(data?.rows ?? []).length === 0 ? (
-                    <tr><td className="p-8 text-center text-muted-foreground">Nothing here yet.</td></tr>
-                  ) : data!.rows.map((r: any) => (
-                    <tr key={r.id} className="border-t border-border hover:bg-muted/50">
-                      <td className="p-3">{r.name}</td>
-                    </tr>
-                  ))}
+                    <tr><td colSpan={2} className="p-8 text-center text-muted-foreground">Nothing here yet.</td></tr>
+                  ) : data!.rows.map((r: any) => {
+                    const ext = type === "live" ? "ts" : (r.container_extension || (type === "series" ? "mkv" : "mp4"));
+                    const pUrl = settings ? `${window.location.protocol}//${window.location.host}/api/public/${type === "live" ? "live" : type === "vod" ? "movie" : "series"}/${encodeURIComponent(settings.proxy_username)}/${encodeURIComponent(settings.proxy_password)}/${r.upstream_id}.${ext}` : "";
+                    
+                    return (
+                      <tr key={r.id} className="border-t border-border hover:bg-muted/50 group">
+                        <td className="p-3">{r.name}</td>
+                        <td className="p-3 text-right">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => setPreviewItem({ name: r.name, url: pUrl })}
+                            disabled={!settings}
+                          >
+                            <Play className="size-4 mr-2" />
+                            Preview
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             )}
