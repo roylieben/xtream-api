@@ -40,6 +40,7 @@ function SettingsPage() {
           sync_interval_live_minutes: Number(form.sync_interval_live_minutes),
           sync_interval_vod_minutes: Number(form.sync_interval_vod_minutes),
           sync_interval_series_minutes: Number(form.sync_interval_series_minutes),
+          disable_signup: form.disable_signup,
         },
       }),
     onSuccess: () => {
