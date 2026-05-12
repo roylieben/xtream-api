@@ -53,6 +53,21 @@ export async function getEnabledLiveStreamIds(): Promise<Set<string>> {
   );
 }
 
+export async function getEnabledLiveStreamEpgIds(): Promise<Set<string>> {
+  // Get all enabled categories for live streams
+  const cats = await fetchAll("categories", "upstream_id,type,enabled");
+  const enabledCatIds = new Set(cats.filter((c: any) => c.type === "live" && c.enabled).map((c: any) => c.upstream_id));
+
+  // Get all live streams
+  const streams = await fetchAll("live_streams", "epg_channel_id,category_id");
+    
+  return new Set(
+    streams
+      .filter((s: any) => enabledCatIds.has(String(s.category_id)) && s.epg_channel_id)
+      .map((s: any) => String(s.epg_channel_id))
+  );
+}
+
 export function rewriteUrls<T extends Record<string, any>>(rows: T[]): T[] {
   return rows; // we don't rewrite stream URLs in metadata; players construct them with our proxy creds
 }
