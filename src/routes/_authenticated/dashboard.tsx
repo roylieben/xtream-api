@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getStats, runSync, testConnection } from "@/lib/admin.functions";
+import { getStats, runSync, testConnection, cancelSync } from "@/lib/admin.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -52,6 +52,15 @@ function Dashboard() {
     mutationFn: (type: "live" | "vod" | "series") => doSync({ data: { type } }),
     onSuccess: (r: any) => {
       toast.success(`Synced: ${r.message ?? `${r.items} items`}`);
+      qc.invalidateQueries({ queryKey: ["stats"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const cancelRun = useMutation({
+    mutationFn: (id: number) => cancelSync({ data: { id } }),
+    onSuccess: () => {
+      toast.success("Sync cancelled");
       qc.invalidateQueries({ queryKey: ["stats"] });
     },
     onError: (e: any) => toast.error(e.message),
@@ -129,7 +138,12 @@ function Dashboard() {
                   <td className="p-3">
                     {r.status === "success" ? <span className="inline-flex items-center gap-1 text-emerald-400"><CheckCircle2 className="size-3.5" />success</span>
                       : r.status === "error" ? <span className="inline-flex items-center gap-1 text-destructive"><XCircle className="size-3.5" />error</span>
-                      : <span className="inline-flex items-center gap-1 text-primary"><Loader2 className="size-3.5 animate-spin" />running</span>}
+                      : (
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center gap-1 text-primary"><Loader2 className="size-3.5 animate-spin" />running</span>
+                          <Button size="sm" variant="outline" className="h-6 px-2 text-xs" onClick={() => cancelRun.mutate(r.id)} disabled={cancelRun.isPending && cancelRun.variables === r.id}>Cancel</Button>
+                        </div>
+                      )}
                   </td>
                   <td className="p-3 text-muted-foreground">{formatDistanceToNow(new Date(r.started_at), { addSuffix: true })}</td>
                   <td className="p-3 tabular-nums">{r.items_processed ?? 0}</td>

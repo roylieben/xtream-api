@@ -12,7 +12,22 @@ export function credsFromSettings(s: { xtream_host?: string | null; xtream_usern
   return { host: s.xtream_host ?? "", username: s.xtream_username ?? "", password: s.xtream_password ?? "" };
 }
 
-async function logRun(type: string, fn: () => Promise<{ items: number; message?: string }>) {
+async function checkCancelled(id?: number) {
+  if (!id) return;
+  const { data } = await supabaseAdmin.from("sync_runs").select("status").eq("id", id).single();
+  if (data?.status !== "running") {
+    throw new Error("Sync was cancelled");
+  }
+}
+
+async function logRun(type: string, fn: (id?: number) => Promise<{ items: number; message?: string }>) {
+  // Cancel any existing running syncs of this type
+  await supabaseAdmin
+    .from("sync_runs")
+    .update({ status: "error", message: "Cancelled by newer run", finished_at: new Date().toISOString() })
+    .eq("type", type)
+    .eq("status", "running");
+
   const { data: run } = await supabaseAdmin
     .from("sync_runs")
     .insert({ type, status: "running" })
@@ -20,7 +35,7 @@ async function logRun(type: string, fn: () => Promise<{ items: number; message?:
     .single();
   const id = run?.id;
   try {
-    const { items, message } = await fn();
+    const { items, message } = await fn(id);
     if (id)
       await supabaseAdmin
         .from("sync_runs")
@@ -28,11 +43,16 @@ async function logRun(type: string, fn: () => Promise<{ items: number; message?:
         .eq("id", id);
     return { ok: true, items, message };
   } catch (e: any) {
-    if (id)
-      await supabaseAdmin
-        .from("sync_runs")
-        .update({ status: "error", finished_at: new Date().toISOString(), message: e?.message ?? String(e) })
-        .eq("id", id);
+    if (id) {
+      // Check if it was already cancelled so we don't overwrite the cancelled message
+      const { data: current } = await supabaseAdmin.from("sync_runs").select("status, message").eq("id", id).single();
+      if (current?.status === "running") {
+        await supabaseAdmin
+          .from("sync_runs")
+          .update({ status: "error", finished_at: new Date().toISOString(), message: e?.message ?? String(e) })
+          .eq("id", id);
+      }
+    }
     throw e;
   }
 }
@@ -60,10 +80,11 @@ function chunks<T>(arr: T[], n: number): T[][] {
 }
 
 export async function syncLive() {
-  return logRun("live", async () => {
+  return logRun("live", async (id) => {
     const s = await getSettingsRow();
     const c = credsFromSettings(s);
     const cats = await xtream.liveCategories(c);
+    await checkCancelled(id);
     await upsertCategories("live", cats);
     const list = await xtream.liveStreams(c);
     const rows = list.map((it: any) => ({
@@ -81,6 +102,7 @@ export async function syncLive() {
       raw: it,
     }));
     for (const part of chunks(rows, 500)) {
+      await checkCancelled(id);
       const { error } = await supabaseAdmin.from("live_streams").upsert(part, { onConflict: "upstream_id" });
       if (error) throw new Error(`live_streams upsert: ${error.message}`);
     }
@@ -93,10 +115,11 @@ export async function syncLive() {
 }
 
 export async function syncVod(opts: { withInfo?: boolean } = {}) {
-  return logRun("vod", async () => {
+  return logRun("vod", async (id) => {
     const s = await getSettingsRow();
     const c = credsFromSettings(s);
     const cats = await xtream.vodCategories(c);
+    await checkCancelled(id);
     await upsertCategories("vod", cats);
     const list = await xtream.vodStreams(c);
     const rows = list.map((it: any) => ({
@@ -113,6 +136,7 @@ export async function syncVod(opts: { withInfo?: boolean } = {}) {
       raw: it,
     }));
     for (const part of chunks(rows, 500)) {
+      await checkCancelled(id);
       const { error } = await supabaseAdmin.from("vod_streams").upsert(part, { onConflict: "upstream_id" });
       if (error) throw new Error(`vod_streams upsert: ${error.message}`);
     }
@@ -125,6 +149,7 @@ export async function syncVod(opts: { withInfo?: boolean } = {}) {
       const missing = ids.filter((id) => !have.has(id));
       const conc = 5;
       for (let i = 0; i < missing.length; i += conc) {
+        await checkCancelled(id);
         const batch = missing.slice(i, i + conc);
         const results = await Promise.allSettled(batch.map((id) => xtream.vodInfo(c, id)));
         const upserts = results
@@ -145,10 +170,11 @@ export async function syncVod(opts: { withInfo?: boolean } = {}) {
 }
 
 export async function syncSeries(opts: { withInfo?: boolean } = {}) {
-  return logRun("series", async () => {
+  return logRun("series", async (id) => {
     const s = await getSettingsRow();
     const c = credsFromSettings(s);
     const cats = await xtream.seriesCategories(c);
+    await checkCancelled(id);
     await upsertCategories("series", cats);
     const list = await xtream.series(c);
     const rows = list.map((it: any) => ({
@@ -167,6 +193,7 @@ export async function syncSeries(opts: { withInfo?: boolean } = {}) {
       raw: it,
     }));
     for (const part of chunks(rows, 500)) {
+      await checkCancelled(id);
       const { error } = await supabaseAdmin.from("series").upsert(part, { onConflict: "upstream_id" });
       if (error) throw new Error(`series upsert: ${error.message}`);
     }
@@ -178,6 +205,7 @@ export async function syncSeries(opts: { withInfo?: boolean } = {}) {
       const missing = ids.filter((id) => !have.has(id));
       const conc = 4;
       for (let i = 0; i < missing.length; i += conc) {
+        await checkCancelled(id);
         const batch = missing.slice(i, i + conc);
         const results = await Promise.allSettled(batch.map((id) => xtream.seriesInfo(c, id)));
         const upserts = results
