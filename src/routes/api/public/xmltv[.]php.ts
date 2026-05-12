@@ -19,7 +19,7 @@ export const Route = createFileRoute("/api/public/xmltv.php")({
         if (!upstream.ok) return new Response("Upstream error", { status: upstream.status });
         
         const xmlText = await upstream.text();
-        const enabledIds = await getEnabledLiveStreamIds();
+        const enabledIds = await getEnabledLiveStreamEpgIds();
         
         const parser = new XMLParser({
           ignoreAttributes: false,
