@@ -11,6 +11,6 @@ export async function redirectStream(
     return new Response("Unauthorized", { status: 401 });
   }
   if (!s.xtream_host) return new Response("Not configured", { status: 503 });
-  const upstream = `${s.xtream_host.replace(/\/$/, "")}/${kind}/${encodeURIComponent(s.xtream_username)}/${encodeURIComponent(s.xtream_password)}/${file}`;
+  const upstream = `${s.xtream_host.replace(/\/$/, "")}/${kind}/${encodeURIComponent(s.xtream_username ?? "")}/${encodeURIComponent(s.xtream_password ?? "")}/${file}`;
   return new Response(null, { status: 302, headers: { Location: upstream } });
 }
