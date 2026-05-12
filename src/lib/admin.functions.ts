@@ -58,8 +58,8 @@ export const testConnection = createServerFn({ method: "POST" })
       if (!s?.xtream_host) return { ok: false, error: "Configure XTream host first" };
       creds = {
         xtream_host: s.xtream_host,
-        xtream_username: s.xtream_username,
-        xtream_password: s.xtream_password,
+        xtream_username: s.xtream_username ?? "",
+        xtream_password: s.xtream_password ?? "",
       };
     }
     try {
