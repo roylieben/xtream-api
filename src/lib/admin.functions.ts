@@ -109,7 +109,7 @@ export const bulkSetCategories = createServerFn({ method: "POST" })
 export const getStats = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async () => {
-    const counts = async (table: string) => {
+    const counts = async (table: "live_streams" | "vod_streams" | "series" | "categories") => {
       const { count } = await supabaseAdmin.from(table).select("*", { count: "exact", head: true });
       return count ?? 0;
     };
