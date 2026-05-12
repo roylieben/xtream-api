@@ -9,25 +9,28 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as ProvidersRouteImport } from './routes/providers'
-import { Route as ClientsRouteImport } from './routes/clients'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ApiProxySplatRouteImport } from './routes/api/proxy/$'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedContentRouteImport } from './routes/_authenticated/content'
+import { Route as AuthenticatedCategoriesRouteImport } from './routes/_authenticated/categories'
+import { Route as ApiPublicXmltvDotphpRouteImport } from './routes/api/public/xmltv[.]php'
+import { Route as ApiPublicPlayer_apiDotphpRouteImport } from './routes/api/public/player_api[.]php'
+import { Route as ApiPublicGetDotphpRouteImport } from './routes/api/public/get[.]php'
+import { Route as ApiPublicCronRouteImport } from './routes/api/public/cron'
+import { Route as ApiPublicSeriesUserPassFileRouteImport } from './routes/api/public/series/$user/$pass/$file'
+import { Route as ApiPublicMovieUserPassFileRouteImport } from './routes/api/public/movie/$user/$pass/$file'
+import { Route as ApiPublicLiveUserPassFileRouteImport } from './routes/api/public/live/$user/$pass/$file'
 
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProvidersRoute = ProvidersRouteImport.update({
-  id: '/providers',
-  path: '/providers',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ClientsRoute = ClientsRouteImport.update({
-  id: '/clients',
-  path: '/clients',
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -35,77 +38,189 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiProxySplatRoute = ApiProxySplatRouteImport.update({
-  id: '/api/proxy/$',
-  path: '/api/proxy/$',
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedContentRoute = AuthenticatedContentRouteImport.update({
+  id: '/content',
+  path: '/content',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedCategoriesRoute = AuthenticatedCategoriesRouteImport.update({
+  id: '/categories',
+  path: '/categories',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const ApiPublicXmltvDotphpRoute = ApiPublicXmltvDotphpRouteImport.update({
+  id: '/api/public/xmltv.php',
+  path: '/api/public/xmltv.php',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPlayer_apiDotphpRoute =
+  ApiPublicPlayer_apiDotphpRouteImport.update({
+    id: '/api/public/player_api.php',
+    path: '/api/public/player_api.php',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicGetDotphpRoute = ApiPublicGetDotphpRouteImport.update({
+  id: '/api/public/get.php',
+  path: '/api/public/get.php',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicCronRoute = ApiPublicCronRouteImport.update({
+  id: '/api/public/cron',
+  path: '/api/public/cron',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicSeriesUserPassFileRoute =
+  ApiPublicSeriesUserPassFileRouteImport.update({
+    id: '/api/public/series/$user/$pass/$file',
+    path: '/api/public/series/$user/$pass/$file',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicMovieUserPassFileRoute =
+  ApiPublicMovieUserPassFileRouteImport.update({
+    id: '/api/public/movie/$user/$pass/$file',
+    path: '/api/public/movie/$user/$pass/$file',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicLiveUserPassFileRoute =
+  ApiPublicLiveUserPassFileRouteImport.update({
+    id: '/api/public/live/$user/$pass/$file',
+    path: '/api/public/live/$user/$pass/$file',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/clients': typeof ClientsRoute
-  '/providers': typeof ProvidersRoute
-  '/settings': typeof SettingsRoute
-  '/api/proxy/$': typeof ApiProxySplatRoute
+  '/login': typeof LoginRoute
+  '/categories': typeof AuthenticatedCategoriesRoute
+  '/content': typeof AuthenticatedContentRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/api/public/cron': typeof ApiPublicCronRoute
+  '/api/public/get.php': typeof ApiPublicGetDotphpRoute
+  '/api/public/player_api.php': typeof ApiPublicPlayer_apiDotphpRoute
+  '/api/public/xmltv.php': typeof ApiPublicXmltvDotphpRoute
+  '/api/public/live/$user/$pass/$file': typeof ApiPublicLiveUserPassFileRoute
+  '/api/public/movie/$user/$pass/$file': typeof ApiPublicMovieUserPassFileRoute
+  '/api/public/series/$user/$pass/$file': typeof ApiPublicSeriesUserPassFileRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/clients': typeof ClientsRoute
-  '/providers': typeof ProvidersRoute
-  '/settings': typeof SettingsRoute
-  '/api/proxy/$': typeof ApiProxySplatRoute
+  '/login': typeof LoginRoute
+  '/categories': typeof AuthenticatedCategoriesRoute
+  '/content': typeof AuthenticatedContentRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/api/public/cron': typeof ApiPublicCronRoute
+  '/api/public/get.php': typeof ApiPublicGetDotphpRoute
+  '/api/public/player_api.php': typeof ApiPublicPlayer_apiDotphpRoute
+  '/api/public/xmltv.php': typeof ApiPublicXmltvDotphpRoute
+  '/api/public/live/$user/$pass/$file': typeof ApiPublicLiveUserPassFileRoute
+  '/api/public/movie/$user/$pass/$file': typeof ApiPublicMovieUserPassFileRoute
+  '/api/public/series/$user/$pass/$file': typeof ApiPublicSeriesUserPassFileRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/clients': typeof ClientsRoute
-  '/providers': typeof ProvidersRoute
-  '/settings': typeof SettingsRoute
-  '/api/proxy/$': typeof ApiProxySplatRoute
+  '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/login': typeof LoginRoute
+  '/_authenticated/categories': typeof AuthenticatedCategoriesRoute
+  '/_authenticated/content': typeof AuthenticatedContentRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/api/public/cron': typeof ApiPublicCronRoute
+  '/api/public/get.php': typeof ApiPublicGetDotphpRoute
+  '/api/public/player_api.php': typeof ApiPublicPlayer_apiDotphpRoute
+  '/api/public/xmltv.php': typeof ApiPublicXmltvDotphpRoute
+  '/api/public/live/$user/$pass/$file': typeof ApiPublicLiveUserPassFileRoute
+  '/api/public/movie/$user/$pass/$file': typeof ApiPublicMovieUserPassFileRoute
+  '/api/public/series/$user/$pass/$file': typeof ApiPublicSeriesUserPassFileRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/clients' | '/providers' | '/settings' | '/api/proxy/$'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/categories'
+    | '/content'
+    | '/dashboard'
+    | '/settings'
+    | '/api/public/cron'
+    | '/api/public/get.php'
+    | '/api/public/player_api.php'
+    | '/api/public/xmltv.php'
+    | '/api/public/live/$user/$pass/$file'
+    | '/api/public/movie/$user/$pass/$file'
+    | '/api/public/series/$user/$pass/$file'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/clients' | '/providers' | '/settings' | '/api/proxy/$'
+  to:
+    | '/'
+    | '/login'
+    | '/categories'
+    | '/content'
+    | '/dashboard'
+    | '/settings'
+    | '/api/public/cron'
+    | '/api/public/get.php'
+    | '/api/public/player_api.php'
+    | '/api/public/xmltv.php'
+    | '/api/public/live/$user/$pass/$file'
+    | '/api/public/movie/$user/$pass/$file'
+    | '/api/public/series/$user/$pass/$file'
   id:
     | '__root__'
     | '/'
-    | '/clients'
-    | '/providers'
-    | '/settings'
-    | '/api/proxy/$'
+    | '/_authenticated'
+    | '/login'
+    | '/_authenticated/categories'
+    | '/_authenticated/content'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/settings'
+    | '/api/public/cron'
+    | '/api/public/get.php'
+    | '/api/public/player_api.php'
+    | '/api/public/xmltv.php'
+    | '/api/public/live/$user/$pass/$file'
+    | '/api/public/movie/$user/$pass/$file'
+    | '/api/public/series/$user/$pass/$file'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ClientsRoute: typeof ClientsRoute
-  ProvidersRoute: typeof ProvidersRoute
-  SettingsRoute: typeof SettingsRoute
-  ApiProxySplatRoute: typeof ApiProxySplatRoute
+  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  LoginRoute: typeof LoginRoute
+  ApiPublicCronRoute: typeof ApiPublicCronRoute
+  ApiPublicGetDotphpRoute: typeof ApiPublicGetDotphpRoute
+  ApiPublicPlayer_apiDotphpRoute: typeof ApiPublicPlayer_apiDotphpRoute
+  ApiPublicXmltvDotphpRoute: typeof ApiPublicXmltvDotphpRoute
+  ApiPublicLiveUserPassFileRoute: typeof ApiPublicLiveUserPassFileRoute
+  ApiPublicMovieUserPassFileRoute: typeof ApiPublicMovieUserPassFileRoute
+  ApiPublicSeriesUserPassFileRoute: typeof ApiPublicSeriesUserPassFileRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/providers': {
-      id: '/providers'
-      path: '/providers'
-      fullPath: '/providers'
-      preLoaderRoute: typeof ProvidersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/clients': {
-      id: '/clients'
-      path: '/clients'
-      fullPath: '/clients'
-      preLoaderRoute: typeof ClientsRouteImport
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -115,33 +230,116 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/proxy/$': {
-      id: '/api/proxy/$'
-      path: '/api/proxy/$'
-      fullPath: '/api/proxy/$'
-      preLoaderRoute: typeof ApiProxySplatRouteImport
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/content': {
+      id: '/_authenticated/content'
+      path: '/content'
+      fullPath: '/content'
+      preLoaderRoute: typeof AuthenticatedContentRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/categories': {
+      id: '/_authenticated/categories'
+      path: '/categories'
+      fullPath: '/categories'
+      preLoaderRoute: typeof AuthenticatedCategoriesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/api/public/xmltv.php': {
+      id: '/api/public/xmltv.php'
+      path: '/api/public/xmltv.php'
+      fullPath: '/api/public/xmltv.php'
+      preLoaderRoute: typeof ApiPublicXmltvDotphpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/player_api.php': {
+      id: '/api/public/player_api.php'
+      path: '/api/public/player_api.php'
+      fullPath: '/api/public/player_api.php'
+      preLoaderRoute: typeof ApiPublicPlayer_apiDotphpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/get.php': {
+      id: '/api/public/get.php'
+      path: '/api/public/get.php'
+      fullPath: '/api/public/get.php'
+      preLoaderRoute: typeof ApiPublicGetDotphpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/cron': {
+      id: '/api/public/cron'
+      path: '/api/public/cron'
+      fullPath: '/api/public/cron'
+      preLoaderRoute: typeof ApiPublicCronRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/series/$user/$pass/$file': {
+      id: '/api/public/series/$user/$pass/$file'
+      path: '/api/public/series/$user/$pass/$file'
+      fullPath: '/api/public/series/$user/$pass/$file'
+      preLoaderRoute: typeof ApiPublicSeriesUserPassFileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/movie/$user/$pass/$file': {
+      id: '/api/public/movie/$user/$pass/$file'
+      path: '/api/public/movie/$user/$pass/$file'
+      fullPath: '/api/public/movie/$user/$pass/$file'
+      preLoaderRoute: typeof ApiPublicMovieUserPassFileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/live/$user/$pass/$file': {
+      id: '/api/public/live/$user/$pass/$file'
+      path: '/api/public/live/$user/$pass/$file'
+      fullPath: '/api/public/live/$user/$pass/$file'
+      preLoaderRoute: typeof ApiPublicLiveUserPassFileRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
 }
 
+interface AuthenticatedRouteChildren {
+  AuthenticatedCategoriesRoute: typeof AuthenticatedCategoriesRoute
+  AuthenticatedContentRoute: typeof AuthenticatedContentRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+}
+
+const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedCategoriesRoute: AuthenticatedCategoriesRoute,
+  AuthenticatedContentRoute: AuthenticatedContentRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+}
+
+const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
+  AuthenticatedRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ClientsRoute: ClientsRoute,
-  ProvidersRoute: ProvidersRoute,
-  SettingsRoute: SettingsRoute,
-  ApiProxySplatRoute: ApiProxySplatRoute,
+  AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  LoginRoute: LoginRoute,
+  ApiPublicCronRoute: ApiPublicCronRoute,
+  ApiPublicGetDotphpRoute: ApiPublicGetDotphpRoute,
+  ApiPublicPlayer_apiDotphpRoute: ApiPublicPlayer_apiDotphpRoute,
+  ApiPublicXmltvDotphpRoute: ApiPublicXmltvDotphpRoute,
+  ApiPublicLiveUserPassFileRoute: ApiPublicLiveUserPassFileRoute,
+  ApiPublicMovieUserPassFileRoute: ApiPublicMovieUserPassFileRoute,
+  ApiPublicSeriesUserPassFileRoute: ApiPublicSeriesUserPassFileRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
