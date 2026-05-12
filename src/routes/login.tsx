@@ -77,13 +77,15 @@ function LoginPage() {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "..." : mode === "signup" ? "Create admin" : "Sign in"}
             </Button>
-            <button
-              type="button"
-              className="w-full text-xs text-muted-foreground hover:text-foreground"
-              onClick={() => setMode(mode === "signup" ? "signin" : "signup")}
-            >
-              {mode === "signup" ? "Already have an admin account? Sign in" : "First time? Create the admin account"}
-            </button>
+            {!disableSignup && (
+              <button
+                type="button"
+                className="w-full text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => setMode(mode === "signup" ? "signin" : "signup")}
+              >
+                {mode === "signup" ? "Already have an admin account? Sign in" : "First time? Create the admin account"}
+              </button>
+            )}
           </form>
         </CardContent>
       </Card>
