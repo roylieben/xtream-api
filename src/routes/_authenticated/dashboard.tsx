@@ -5,7 +5,7 @@ import { getStats, runSync, testConnection } from "@/lib/admin.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw, Tv, Film, Clapperboard, FolderTree, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { RefreshCw, Tv, Film, Clapperboard, FolderTree, CheckCircle2, XCircle, Loader2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
