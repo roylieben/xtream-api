@@ -22,6 +22,7 @@ const settingsSchema = z.object({
   sync_interval_live_minutes: z.number().int().min(5).max(10080),
   sync_interval_vod_minutes: z.number().int().min(5).max(10080),
   sync_interval_series_minutes: z.number().int().min(5).max(10080),
+  disable_signup: z.boolean().default(false),
 });
 
 export const updateSettings = createServerFn({ method: "POST" })
