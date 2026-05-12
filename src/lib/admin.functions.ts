@@ -112,12 +112,30 @@ export const getCategories = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
 
     const table = data.type === "live" ? "live_streams" : data.type === "vod" ? "vod_streams" : "series";
-    const { data: streams } = await supabaseAdmin.from(table).select("category_id");
     const counts: Record<string, number> = {};
-    if (streams) {
-      for (const s of streams) {
-        if (s.category_id) {
-          counts[s.category_id] = (counts[s.category_id] || 0) + 1;
+    
+    // Fetch all category_ids handling Supabase 1000 row limit
+    let hasMore = true;
+    let from = 0;
+    const limit = 1000;
+    while (hasMore) {
+      const { data: streams, error: streamsErr } = await supabaseAdmin
+        .from(table)
+        .select("category_id")
+        .range(from, from + limit - 1);
+        
+      if (streamsErr || !streams || streams.length === 0) {
+        hasMore = false;
+      } else {
+        for (const s of streams) {
+          if (s.category_id) {
+            counts[s.category_id] = (counts[s.category_id] || 0) + 1;
+          }
+        }
+        if (streams.length < limit) {
+          hasMore = false;
+        } else {
+          from += limit;
         }
       }
     }
