@@ -1,7 +1,7 @@
 // Generates a filtered M3U playlist from synced live/vod/series.
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { authProxy, getEnabledCategoryIds } from "@/lib/proxy-helpers.server";
+import { authProxy, getEnabledCategoryIds, fetchAll } from "@/lib/proxy-helpers.server";
 
 export const Route = createFileRoute("/api/public/get.php")({
   server: {
@@ -11,7 +11,9 @@ export const Route = createFileRoute("/api/public/get.php")({
         const auth = await authProxy(url);
         if (!auth.ok) return auth.res;
         const s = auth.settings;
-        const proxyHost = `${url.protocol}//${url.host}/api/public`;
+        const protocol = request.headers.get("x-forwarded-proto") ?? url.protocol.replace(":", "");
+        const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? url.host;
+        const proxyHost = `${protocol}://${host}/api/public`;
 
         const [liveEnabled, vodEnabled, seriesEnabled] = await Promise.all([
           getEnabledCategoryIds("live"),
@@ -19,10 +21,10 @@ export const Route = createFileRoute("/api/public/get.php")({
           getEnabledCategoryIds("series"),
         ]);
 
-        const [{ data: lives }, { data: vods }, { data: cats }] = await Promise.all([
-          supabaseAdmin.from("live_streams").select("upstream_id,name,stream_icon,category_id,epg_channel_id").limit(50000),
-          supabaseAdmin.from("vod_streams").select("upstream_id,name,stream_icon,category_id,container_extension").limit(50000),
-          supabaseAdmin.from("categories").select("type,upstream_id,name"),
+        const [lives, vods, cats] = await Promise.all([
+          fetchAll("live_streams", "upstream_id,name,stream_icon,category_id,epg_channel_id"),
+          fetchAll("vod_streams", "upstream_id,name,stream_icon,category_id,container_extension"),
+          fetchAll("categories", "type,upstream_id,name"),
         ]);
         const catName = new Map<string, string>();
         for (const c of cats ?? []) catName.set(`${c.type}:${c.upstream_id}`, c.name ?? "");
