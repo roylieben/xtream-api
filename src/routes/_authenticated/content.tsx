@@ -18,17 +18,34 @@ export const Route = createFileRoute("/_authenticated/content")({
 function Browser({ type }: { type: "live" | "vod" | "series" }) {
   const fetchContent = useServerFn(getContent);
   const fetchCats = useServerFn(getCategories);
+  const fetchSettings = useServerFn(getSettings);
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState<string>("all");
   const [page, setPage] = useState(1);
   const [showEnabledCatsOnly, setShowEnabledCatsOnly] = useState(true);
+  const [previewItem, setPreviewItem] = useState<{ name: string; url: string } | null>(null);
   
   const { data: allCategories } = useQuery({
     queryKey: ["categories", type],
     queryFn: () => fetchCats({ data: { type } }),
   });
   
+  const { data: settings } = useQuery({
+    queryKey: ["settings"],
+    queryFn: () => fetchSettings(),
+  });
+  
   const categories = (allCategories ?? []).filter((c: any) => showEnabledCatsOnly ? c.enabled : true);
+  
+  useEffect(() => {
+    if (showEnabledCatsOnly && categoryId === "all" && categories.length > 0) {
+      setCategoryId(categories[0].upstream_id);
+      setPage(1);
+    } else if (!showEnabledCatsOnly && categoryId !== "all" && categories.length > 0 && !categories.some((c: any) => c.upstream_id === categoryId)) {
+      setCategoryId("all");
+      setPage(1);
+    }
+  }, [showEnabledCatsOnly, categories, categoryId]);
   
   const { data, isLoading } = useQuery({
     queryKey: ["content", type, search, categoryId, page],
