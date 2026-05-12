@@ -8,8 +8,8 @@ export async function getSettingsRow() {
   return data;
 }
 
-export function credsFromSettings(s: { xtream_host: string; xtream_username: string; xtream_password: string }): XtreamCreds {
-  return { host: s.xtream_host, username: s.xtream_username, password: s.xtream_password };
+export function credsFromSettings(s: { xtream_host?: string | null; xtream_username?: string | null; xtream_password?: string | null }): XtreamCreds {
+  return { host: s.xtream_host ?? "", username: s.xtream_username ?? "", password: s.xtream_password ?? "" };
 }
 
 async function logRun(type: string, fn: () => Promise<{ items: number; message?: string }>) {
@@ -213,8 +213,8 @@ export function maybeRunDueSyncs(): void {
       const s = await getSettingsRow();
       if (!s.xtream_host || !s.xtream_username) return;
       const now = Date.now();
-      const due = (last: string | null, mins: number) =>
-        !last || now - new Date(last).getTime() >= mins * 60_000;
+      const due = (last: string | null | undefined, mins: number | null | undefined) =>
+        !last || now - new Date(last).getTime() >= (mins ?? 0) * 60_000;
       if (due(s.last_sync_live_at, s.sync_interval_live_minutes)) syncLive().catch(() => {});
       if (due(s.last_sync_vod_at, s.sync_interval_vod_minutes)) syncVod({ withInfo: true }).catch(() => {});
       if (due(s.last_sync_series_at, s.sync_interval_series_minutes)) syncSeries({ withInfo: true }).catch(() => {});
