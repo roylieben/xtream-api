@@ -218,8 +218,8 @@ function SettingsPage() {
             <Label htmlFor="disable_signup">Disable public admin creation (signup)</Label>
           </div>
           <div className="flex justify-end pt-2">
-            <Button onClick={() => save.mutate()} disabled={save.isPending}>
-              {save.isPending && <Loader2 className="size-4 animate-spin mr-2" />} Save security settings
+            <Button onClick={() => saveSecurity.mutate()} disabled={saveSecurity.isPending}>
+              {saveSecurity.isPending && <Loader2 className="size-4 animate-spin mr-2" />} Save security settings
             </Button>
           </div>
         </CardContent>
