@@ -388,6 +388,20 @@ export const setCustomCategoryEnabled = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const renameCustomCategory = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ id: z.number().int(), name: z.string().trim().min(1).max(200) }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    const { error } = await supabaseAdmin
+      .from("custom_categories")
+      .update({ name: data.name })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 export const addStreamsToCustomCategory = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
