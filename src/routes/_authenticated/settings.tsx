@@ -16,7 +16,9 @@ export const Route = createFileRoute("/_authenticated/settings")({
 
 function SettingsPage() {
   const fetchSettings = useServerFn(getSettings);
-  const update = useServerFn(updateSettings);
+  const saveProxyFn = useServerFn(updateProxy);
+  const saveIntervalsFn = useServerFn(updateSyncIntervals);
+  const saveSecurityFn = useServerFn(updateSecurity);
   const saveUp = useServerFn(updateUpstream);
   const test = useServerFn(testConnection);
   const qc = useQueryClient();
@@ -28,25 +30,34 @@ function SettingsPage() {
     if (data) setForm({ ...data });
   }, [data]);
 
-  const save = useMutation({
+  const onSaved = (label: string) => {
+    toast.success(`${label} saved`);
+    qc.invalidateQueries({ queryKey: ["settings"] });
+  };
+
+  const saveProxy = useMutation({
     mutationFn: () =>
-      update({
+      saveProxyFn({ data: { proxy_username: form.proxy_username, proxy_password: form.proxy_password } }),
+    onSuccess: () => onSaved("Proxy settings"),
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const saveIntervals = useMutation({
+    mutationFn: () =>
+      saveIntervalsFn({
         data: {
-          xtream_host: form.xtream_host,
-          xtream_username: form.xtream_username,
-          xtream_password: form.xtream_password,
-          proxy_username: form.proxy_username,
-          proxy_password: form.proxy_password,
           sync_interval_live_minutes: Number(form.sync_interval_live_minutes),
           sync_interval_vod_minutes: Number(form.sync_interval_vod_minutes),
           sync_interval_series_minutes: Number(form.sync_interval_series_minutes),
-          disable_signup: form.disable_signup,
         },
       }),
-    onSuccess: () => {
-      toast.success("Saved");
-      qc.invalidateQueries({ queryKey: ["settings"] });
-    },
+    onSuccess: () => onSaved("Sync intervals"),
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const saveSecurity = useMutation({
+    mutationFn: () => saveSecurityFn({ data: { disable_signup: !!form.disable_signup } }),
+    onSuccess: () => onSaved("Security settings"),
     onError: (e: any) => toast.error(e.message),
   });
 
