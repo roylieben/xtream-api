@@ -102,7 +102,7 @@ function Browser({ type }: { type: "live" | "vod" | "series" }) {
         
         <Card className="flex-1 overflow-hidden flex flex-col">
           <CardContent className="p-0 flex-1 overflow-auto">
-            {isLoading ? (
+            {showLoading ? (
               <div className="p-8 text-center text-muted-foreground"><Loader2 className="inline size-4 animate-spin" /></div>
             ) : (
               <table className="w-full text-sm">
