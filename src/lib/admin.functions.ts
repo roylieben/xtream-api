@@ -231,6 +231,7 @@ export const getContent = createServerFn({ method: "GET" })
         search: z.string().max(200).optional(),
         categoryId: z.string().optional(),
         page: z.number().int().min(1).max(10000).optional(),
+        pageSize: z.number().int().min(1).max(5000).optional(),
       })
       .parse(d),
   )
@@ -240,22 +241,14 @@ export const getContent = createServerFn({ method: "GET" })
       | "vod_streams"
       | "series";
     const page = data.page ?? 1;
-    const pageSize = 50;
-    
-    // Use categories!inner or left join to get category name.
-    // Assuming a foreign key exists from table.category_id -> categories.upstream_id
-    // But Supabase join syntax needs the actual relationship.
-    // If it's not explicitly defined in the database schema, it might fail.
-    // Wait! Let's just do a separate query or see if we can do an inner join.
-    // If we can't join directly, we can fetch the categories separately.
+    const pageSize = data.pageSize ?? 50;
+
     let q = supabaseAdmin
       .from(table)
       .select("*", { count: "exact" })
-      .order("name", { ascending: true })
       .range((page - 1) * pageSize, page * pageSize - 1);
 
     if (data.search) {
-      // Match stream name OR streams whose category name matches the search.
       const { data: matchCats } = await supabaseAdmin
         .from("categories")
         .select("upstream_id")
@@ -273,22 +266,33 @@ export const getContent = createServerFn({ method: "GET" })
 
     const { data: rows, count, error } = await q;
     if (error) throw new Error(error.message);
-    
-    // Fetch categories to map the names
-    const catIds = [...new Set((rows ?? []).map((r) => r.category_id).filter((id): id is string => typeof id === "string" && id.length > 0))];
+
+    // Sort by upstream "num" (channel order from XTream), falling back to name.
+    const sorted = [...(rows ?? [])].sort((a: any, b: any) => {
+      const na = parseInt(a.num ?? "", 10);
+      const nb = parseInt(b.num ?? "", 10);
+      const aHas = Number.isFinite(na);
+      const bHas = Number.isFinite(nb);
+      if (aHas && bHas && na !== nb) return na - nb;
+      if (aHas && !bHas) return -1;
+      if (!aHas && bHas) return 1;
+      return String(a.name ?? "").localeCompare(String(b.name ?? ""));
+    });
+
+    const catIds = [...new Set(sorted.map((r: any) => r.category_id).filter((id: any): id is string => typeof id === "string" && id.length > 0))];
     const { data: cats } = await supabaseAdmin
       .from("categories")
       .select("upstream_id,name")
       .eq("type", data.type)
       .in("upstream_id", catIds);
-      
+
     const catMap = new Map((cats ?? []).map((c: any) => [c.upstream_id, c.name]));
-    
-    const mappedRows = (rows ?? []).map((r: any) => ({
+
+    const mappedRows = sorted.map((r: any) => ({
       ...r,
       category_name: catMap.get(r.category_id) ?? r.category_id,
     }));
-    
+
     return { rows: mappedRows, total: count ?? 0, page, pageSize };
   });
 
