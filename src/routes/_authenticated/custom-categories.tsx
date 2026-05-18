@@ -229,7 +229,7 @@ function ManageStreamsDialog({
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+      <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-[95vw] max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Manage streams — {category.name}</DialogTitle>
         </DialogHeader>
@@ -250,33 +250,42 @@ function ManageStreamsDialog({
                   No streams linked yet.
                 </div>
               ) : (
-                <ul>
-                  {(linkedQ.data ?? []).map((s: any) => (
-                    <li
-                      key={s.upstream_id}
-                      className="flex items-center gap-2 px-3 py-2 border-b border-border last:border-0 hover:bg-muted/30"
-                    >
-                      {s.stream_icon && (
-                        <img
-                          src={s.stream_icon}
-                          alt=""
-                          className="size-6 rounded object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = "none";
-                          }}
-                        />
-                      )}
-                      <span className="flex-1 truncate text-sm">{s.name}</span>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => remove.mutate(s.upstream_id)}
-                      >
-                        <X className="size-4" />
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
+                <table className="w-full text-sm">
+                  <thead className="text-xs text-muted-foreground bg-muted/30 sticky top-0">
+                    <tr>
+                      <th className="text-left font-medium px-3 py-2">Name</th>
+                      <th className="text-left font-medium px-3 py-2 w-48">Category</th>
+                      <th className="w-10"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(linkedQ.data ?? []).map((s: any) => (
+                      <tr key={s.upstream_id} className="border-t border-border hover:bg-muted/30">
+                        <td className="px-3 py-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            {s.stream_icon && (
+                              <img
+                                src={s.stream_icon}
+                                alt=""
+                                className="size-6 rounded object-cover shrink-0"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = "none";
+                                }}
+                              />
+                            )}
+                            <span className="truncate">{s.name}</span>
+                          </div>
+                        </td>
+                        <td className="px-3 py-2 text-muted-foreground truncate">{s.category_name ?? "—"}</td>
+                        <td className="px-2 py-2 text-right">
+                          <Button size="sm" variant="ghost" onClick={() => remove.mutate(s.upstream_id)}>
+                            <X className="size-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               )}
             </div>
           </div>
@@ -288,7 +297,7 @@ function ManageStreamsDialog({
               <div className="relative">
                 <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
                 <Input
-                  placeholder="Search streams…"
+                  placeholder="Search by stream or category name…"
                   value={search}
                   onChange={(e) => onSearchChange(e.target.value)}
                   className="h-8 pl-7 text-sm"
@@ -305,37 +314,50 @@ function ManageStreamsDialog({
                   No streams found.
                 </div>
               ) : (
-                <ul>
-                  {(availableQ.data?.rows ?? []).map((s: any) => {
-                    const isLinked = linkedIds.has(s.upstream_id);
-                    return (
-                      <li
-                        key={s.upstream_id}
-                        className="flex items-center gap-2 px-3 py-2 border-b border-border last:border-0 hover:bg-muted/30"
-                      >
-                        {s.stream_icon && (
-                          <img
-                            src={s.stream_icon}
-                            alt=""
-                            className="size-6 rounded object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = "none";
-                            }}
-                          />
-                        )}
-                        <span className="flex-1 truncate text-sm">{s.name}</span>
-                        <Button
-                          size="sm"
-                          variant={isLinked ? "ghost" : "outline"}
-                          disabled={isLinked || add.isPending}
-                          onClick={() => add.mutate(s.upstream_id)}
-                        >
-                          {isLinked ? "Added" : <Plus className="size-4" />}
-                        </Button>
-                      </li>
-                    );
-                  })}
-                </ul>
+                <table className="w-full text-sm">
+                  <thead className="text-xs text-muted-foreground bg-muted/30 sticky top-0">
+                    <tr>
+                      <th className="text-left font-medium px-3 py-2">Name</th>
+                      <th className="text-left font-medium px-3 py-2 w-48">Category</th>
+                      <th className="w-10"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(availableQ.data?.rows ?? []).map((s: any) => {
+                      const isLinked = linkedIds.has(s.upstream_id);
+                      return (
+                        <tr key={s.upstream_id} className="border-t border-border hover:bg-muted/30">
+                          <td className="px-3 py-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              {s.stream_icon && (
+                                <img
+                                  src={s.stream_icon}
+                                  alt=""
+                                  className="size-6 rounded object-cover shrink-0"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = "none";
+                                  }}
+                                />
+                              )}
+                              <span className="truncate">{s.name}</span>
+                            </div>
+                          </td>
+                          <td className="px-3 py-2 text-muted-foreground truncate">{s.category_name ?? "—"}</td>
+                          <td className="px-2 py-2 text-right">
+                            <Button
+                              size="sm"
+                              variant={isLinked ? "ghost" : "outline"}
+                              disabled={isLinked || add.isPending}
+                              onClick={() => add.mutate(s.upstream_id)}
+                            >
+                              {isLinked ? "Added" : <Plus className="size-4" />}
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               )}
               {(availableQ.data?.total ?? 0) > (availableQ.data?.rows.length ?? 0) && (
                 <div className="p-2 text-center text-xs text-muted-foreground">
