@@ -1,7 +1,7 @@
 // Generates a filtered M3U playlist from synced live/vod/series.
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { authProxy, getEnabledCategoryIds, fetchAll } from "@/lib/proxy-helpers.server";
+import { authProxy, getEnabledCategoryIds, fetchAll, getEnabledCustomCategoryMap } from "@/lib/proxy-helpers.server";
 
 export const Route = createFileRoute("/api/public/get.php")({
   server: {
