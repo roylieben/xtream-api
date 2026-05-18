@@ -191,6 +191,14 @@ function CustomCategoriesPage() {
                         <Button
                           size="sm"
                           variant="outline"
+                          onClick={() => startEdit(c)}
+                          disabled={editingId === c.id}
+                        >
+                          <Pencil className="size-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
                           onClick={() => setManaging({ id: c.id, name: c.name })}
                         >
                           Manage streams
