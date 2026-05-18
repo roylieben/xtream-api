@@ -540,8 +540,17 @@ export const createUser = createServerFn({ method: "POST" })
 export const deleteUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ userId: z.string().uuid() }).parse(d))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    if (data.userId === context.userId) {
+      throw new Error("You cannot delete the currently signed-in account.");
+    }
     const { error } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
     if (error) throw new Error(error.message);
     return { ok: true };
+  });
+
+export const getCurrentUserId = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    return { userId: context.userId as string };
   });

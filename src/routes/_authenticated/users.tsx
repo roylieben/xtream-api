@@ -8,6 +8,7 @@ import {
   updateUserEmail,
   createUser,
   deleteUser,
+  getCurrentUserId,
 } from "@/lib/admin.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,12 @@ function UsersPage() {
   const { data: users, isLoading } = useQuery({
     queryKey: ["users"],
     queryFn: () => fetchUsers(),
+  });
+
+  const fetchMe = useServerFn(getCurrentUserId);
+  const { data: me } = useQuery({
+    queryKey: ["current-user-id"],
+    queryFn: () => fetchMe(),
   });
 
   const pwMut = useMutation({
@@ -151,6 +158,8 @@ function UsersPage() {
                         <Button
                           size="sm"
                           variant="outline"
+                          disabled={me?.userId === u.id}
+                          title={me?.userId === u.id ? "You cannot delete your own account" : undefined}
                           onClick={() => {
                             if (confirm(`Delete user "${u.email}"? This cannot be undone.`))
                               delMut.mutate(u.id);
