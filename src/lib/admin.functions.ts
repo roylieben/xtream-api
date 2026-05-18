@@ -127,6 +127,8 @@ export const cancelSync = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+const CUSTOM_CAT_PREFIX = "custom_";
+
 export const getCategories = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ type: z.enum(["live", "vod", "series"]) }).parse(d))
@@ -141,7 +143,7 @@ export const getCategories = createServerFn({ method: "GET" })
 
     const table = data.type === "live" ? "live_streams" : data.type === "vod" ? "vod_streams" : "series";
     const counts: Record<string, number> = {};
-    
+
     // Fetch all category_ids handling Supabase 1000 row limit
     let hasMore = true;
     let from = 0;
@@ -151,7 +153,7 @@ export const getCategories = createServerFn({ method: "GET" })
         .from(table)
         .select("category_id")
         .range(from, from + limit - 1);
-        
+
       if (streamsErr || !streams || streams.length === 0) {
         hasMore = false;
       } else {
@@ -168,10 +170,38 @@ export const getCategories = createServerFn({ method: "GET" })
       }
     }
 
-    return (rows ?? []).map(r => ({
+    const mapped = (rows ?? []).map(r => ({
       ...r,
-      stream_count: counts[r.upstream_id] || 0
+      stream_count: counts[r.upstream_id] || 0,
+      is_custom: false,
     }));
+
+    if (data.type !== "live") return mapped;
+
+    // Append custom categories (live only)
+    const { data: customCats } = await supabaseAdmin
+      .from("custom_categories")
+      .select("id, name, enabled")
+      .order("name", { ascending: true });
+    const { data: customLinks } = await supabaseAdmin
+      .from("custom_category_streams")
+      .select("custom_category_id");
+    const customCounts: Record<number, number> = {};
+    for (const l of customLinks ?? []) {
+      customCounts[l.custom_category_id] = (customCounts[l.custom_category_id] ?? 0) + 1;
+    }
+    const customMapped = (customCats ?? []).map((c: any) => ({
+      id: c.id,
+      upstream_id: `${CUSTOM_CAT_PREFIX}${c.id}`,
+      name: c.name,
+      type: "live",
+      enabled: c.enabled,
+      parent_id: null,
+      stream_count: customCounts[c.id] ?? 0,
+      is_custom: true,
+    }));
+
+    return [...mapped, ...customMapped];
   });
 
 export const setCategoryEnabled = createServerFn({ method: "POST" })
@@ -248,6 +278,24 @@ export const getContent = createServerFn({ method: "GET" })
       .select("*", { count: "exact" })
       .range((page - 1) * pageSize, page * pageSize - 1);
 
+    // Custom-category filter (live only): resolve linked stream upstream IDs.
+    if (data.type === "live" && data.categoryId && data.categoryId.startsWith(CUSTOM_CAT_PREFIX)) {
+      const customId = Number(data.categoryId.slice(CUSTOM_CAT_PREFIX.length));
+      if (Number.isFinite(customId)) {
+        const { data: links } = await supabaseAdmin
+          .from("custom_category_streams")
+          .select("stream_upstream_id")
+          .eq("custom_category_id", customId);
+        const ids = (links ?? []).map((l: any) => l.stream_upstream_id);
+        if (ids.length === 0) {
+          return { rows: [], total: 0, page, pageSize };
+        }
+        q = q.in("upstream_id", ids);
+      }
+    } else if (data.categoryId && data.categoryId !== "all") {
+      q = q.eq("category_id", data.categoryId);
+    }
+
     if (data.search) {
       const { data: matchCats } = await supabaseAdmin
         .from("categories")
@@ -262,7 +310,6 @@ export const getContent = createServerFn({ method: "GET" })
       }
       q = q.or(orParts.join(","));
     }
-    if (data.categoryId && data.categoryId !== "all") q = q.eq("category_id", data.categoryId);
 
     const { data: rows, count, error } = await q;
     if (error) throw new Error(error.message);

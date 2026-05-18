@@ -1,7 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { authProxy, getEnabledCategoryIds, jsonResponse, fetchAll } from "@/lib/proxy-helpers.server";
+import { authProxy, getEnabledCategoryIds, jsonResponse, fetchAll, getEnabledCustomCategoryMap } from "@/lib/proxy-helpers.server";
 import { maybeRunDueSyncs } from "@/lib/sync.server";
+
+// Custom categories are exposed with a "custom_<id>" category_id to avoid
+// colliding with upstream numeric category IDs.
+const CUSTOM_CAT_PREFIX = "custom_";
 
 async function buildAccountInfo(s: any) {
   return {
@@ -33,7 +37,7 @@ async function buildAccountInfo(s: any) {
 
 async function listCategories(type: "live" | "vod" | "series") {
   const data = await fetchAll("categories", "upstream_id,name,parent_id,enabled,type");
-  return data
+  const upstream = data
     .filter((c: any) => c.type === type && c.enabled)
     .sort((a: any, b: any) => (a.name || "").localeCompare(b.name || ""))
     .map((c: any) => ({
@@ -41,14 +45,60 @@ async function listCategories(type: "live" | "vod" | "series") {
       category_name: c.name,
       parent_id: c.parent_id ?? 0,
     }));
+
+  if (type !== "live") return upstream;
+
+  const customs = await fetchAll("custom_categories", "id,name,enabled");
+  const customEntries = customs
+    .filter((c: any) => c.enabled)
+    .sort((a: any, b: any) => (a.name || "").localeCompare(b.name || ""))
+    .map((c: any) => ({
+      category_id: `${CUSTOM_CAT_PREFIX}${c.id}`,
+      category_name: c.name,
+      parent_id: 0,
+    }));
+
+  return [...upstream, ...customEntries];
 }
 
 async function listLive() {
   const enabled = await getEnabledCategoryIds("live");
+  const customMap = await getEnabledCustomCategoryMap();
   const data = await fetchAll("live_streams", "*");
+
+  // Build reverse index: stream_upstream_id -> custom category ids it belongs to.
+  const streamToCustom = new Map<string, string[]>();
+  for (const [cid, streamSet] of customMap.entries()) {
+    const catKey = `${CUSTOM_CAT_PREFIX}${cid}`;
+    for (const sid of streamSet) {
+      const arr = streamToCustom.get(sid) ?? [];
+      arr.push(catKey);
+      streamToCustom.set(sid, arr);
+    }
+  }
+
   return data
-    .filter((r: any) => r.category_id && enabled.has(String(r.category_id)))
-    .map((r: any) => ({ ...(r.raw ?? {}), stream_id: Number(r.upstream_id) || r.upstream_id }));
+    .filter((r: any) => {
+      const upstreamOk = r.category_id && enabled.has(String(r.category_id));
+      const customOk = streamToCustom.has(String(r.upstream_id));
+      return upstreamOk || customOk;
+    })
+    .map((r: any) => {
+      const sid = String(r.upstream_id);
+      const customCats = streamToCustom.get(sid) ?? [];
+      const upstreamCatOk = r.category_id && enabled.has(String(r.category_id));
+      const primaryCat = upstreamCatOk ? String(r.category_id) : customCats[0];
+      const allCats = [
+        ...(upstreamCatOk ? [String(r.category_id)] : []),
+        ...customCats,
+      ];
+      return {
+        ...(r.raw ?? {}),
+        stream_id: Number(r.upstream_id) || r.upstream_id,
+        category_id: primaryCat,
+        category_ids: allCats,
+      };
+    });
 }
 
 async function listVod() {

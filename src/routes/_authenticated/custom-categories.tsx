@@ -289,7 +289,7 @@ function ManageStreamsDialog({
           <DialogTitle>Manage streams — {category.name}</DialogTitle>
         </DialogHeader>
 
-        <div className="grid grid-cols-2 gap-4 flex-1 min-h-0 overflow-hidden">
+        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,2.2fr)] gap-4 flex-1 min-h-0 overflow-hidden">
           {/* Linked */}
           <div className="flex flex-col border border-border rounded-md overflow-hidden min-h-0">
             <div className="px-3 py-2 bg-muted/50 text-xs font-medium border-b border-border">
