@@ -144,8 +144,10 @@ export const runSync = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     if (data.type === "live") return syncLive();
-    if (data.type === "vod") return syncVod({ withInfo: data.withInfo ?? true });
-    return syncSeries({ withInfo: data.withInfo ?? true });
+    // VOD/Series info entries are large and rate-limited upstream; fetch them
+    // on-demand from the player_api endpoints instead of during the catalog sync.
+    if (data.type === "vod") return syncVod({ withInfo: data.withInfo ?? false });
+    return syncSeries({ withInfo: data.withInfo ?? false });
   });
 
 export const cancelSync = createServerFn({ method: "POST" })
