@@ -7,6 +7,7 @@ import {
   createCustomCategory,
   deleteCustomCategory,
   setCustomCategoryEnabled,
+  renameCustomCategory,
   getCustomCategoryStreams,
   addStreamsToCustomCategory,
   removeStreamFromCustomCategory,
@@ -18,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Loader2, Plus, Trash2, X, Search } from "lucide-react";
+import { Loader2, Plus, Trash2, X, Search, Pencil, Check } from "lucide-react";
 import {
   Dialog,
   DialogContent,
