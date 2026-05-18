@@ -227,16 +227,47 @@ function ManageStreamsDialog({
           search: debounced || undefined,
           categoryId: categoryId === "all" ? undefined : categoryId,
           page: 1,
+          pageSize: 5000,
         },
       }),
   });
 
   const linkedIds = new Set((linkedQ.data ?? []).map((s: any) => s.upstream_id));
 
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // Reset selection when the filtered list changes
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [debounced, categoryId]);
+
+  const selectableRows = (availableQ.data?.rows ?? []).filter(
+    (s: any) => !linkedIds.has(s.upstream_id),
+  );
+
+  const toggleSelected = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    setSelectedIds(new Set(selectableRows.map((s: any) => s.upstream_id)));
+  };
+  const selectNone = () => setSelectedIds(new Set());
+
   const add = useMutation({
-    mutationFn: (streamId: string) =>
-      addStreams({ data: { categoryId: category.id, streamIds: [streamId] } }),
-    onSuccess: () => {
+    mutationFn: (streamIds: string[]) =>
+      addStreams({ data: { categoryId: category.id, streamIds } }),
+    onSuccess: (_d, vars) => {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        for (const id of vars) next.delete(id);
+        return next;
+      });
       qc.invalidateQueries({ queryKey: ["custom-cat-streams", category.id] });
     },
     onError: (e: any) => toast.error(e.message),
