@@ -253,14 +253,14 @@ function ManageStreamsDialog({
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-[95vw] max-h-[90vh] flex flex-col">
+      <DialogContent className="w-[80vw] max-w-[80vw] sm:max-w-[80vw] h-[80vh] max-h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Manage streams — {category.name}</DialogTitle>
         </DialogHeader>
 
         <div className="grid grid-cols-2 gap-4 flex-1 min-h-0 overflow-hidden">
           {/* Linked */}
-          <div className="flex flex-col border border-border rounded-md overflow-hidden">
+          <div className="flex flex-col border border-border rounded-md overflow-hidden min-h-0">
             <div className="px-3 py-2 bg-muted/50 text-xs font-medium border-b border-border">
               Linked streams ({linkedQ.data?.length ?? 0})
             </div>
@@ -274,121 +274,134 @@ function ManageStreamsDialog({
                   No streams linked yet.
                 </div>
               ) : (
-                <table className="w-full text-sm">
-                  <thead className="text-xs text-muted-foreground bg-muted/30 sticky top-0">
-                    <tr>
-                      <th className="text-left font-medium px-3 py-2">Name</th>
-                      <th className="text-left font-medium px-3 py-2 w-48">Category</th>
-                      <th className="w-10"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(linkedQ.data ?? []).map((s: any) => (
-                      <tr key={s.upstream_id} className="border-t border-border hover:bg-muted/30">
-                        <td className="px-3 py-2">
-                          <div className="flex items-center gap-2 min-w-0">
-                            {s.stream_icon && (
-                              <img
-                                src={s.stream_icon}
-                                alt=""
-                                className="size-6 rounded object-cover shrink-0"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).style.display = "none";
-                                }}
-                              />
-                            )}
-                            <span className="truncate">{s.name}</span>
-                          </div>
-                        </td>
-                        <td className="px-3 py-2 text-muted-foreground truncate">{s.category_name ?? "—"}</td>
-                        <td className="px-2 py-2 text-right">
-                          <Button size="sm" variant="ghost" onClick={() => remove.mutate(s.upstream_id)}>
-                            <X className="size-4" />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <ul>
+                  {(linkedQ.data ?? []).map((s: any) => (
+                    <li
+                      key={s.upstream_id}
+                      className="flex items-center gap-2 px-3 py-2 border-b border-border last:border-0 hover:bg-muted/30"
+                    >
+                      {s.stream_icon && (
+                        <img
+                          src={s.stream_icon}
+                          alt=""
+                          className="size-6 rounded object-cover shrink-0"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = "none";
+                          }}
+                        />
+                      )}
+                      <span className="flex-1 truncate text-sm">{s.name}</span>
+                      <Button size="sm" variant="ghost" onClick={() => remove.mutate(s.upstream_id)}>
+                        <X className="size-4" />
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
               )}
             </div>
           </div>
 
           {/* Available */}
-          <div className="flex flex-col border border-border rounded-md overflow-hidden">
-            <div className="px-3 py-2 bg-muted/50 border-b border-border space-y-2">
-              <div className="text-xs font-medium">Available live streams</div>
-              <div className="relative">
-                <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-                <Input
-                  placeholder="Search by stream or category name…"
-                  value={search}
-                  onChange={(e) => onSearchChange(e.target.value)}
-                  className="h-8 pl-7 text-sm"
+          <div className="flex border border-border rounded-md overflow-hidden min-h-0">
+            {/* Category sidebar */}
+            <div className="w-56 flex flex-col border-r border-border bg-muted/20 shrink-0">
+              <div className="px-3 py-2 border-b border-border flex items-center gap-2">
+                <Switch
+                  id="dlg-enabled-only"
+                  checked={showEnabledCatsOnly}
+                  onCheckedChange={setShowEnabledCatsOnly}
                 />
+                <label htmlFor="dlg-enabled-only" className="text-xs cursor-pointer">
+                  Enabled only
+                </label>
+              </div>
+              <div className="flex-1 overflow-y-auto p-1 space-y-0.5">
+                {!showEnabledCatsOnly && (
+                  <Button
+                    variant={categoryId === "all" ? "secondary" : "ghost"}
+                    className="w-full justify-start font-normal text-left h-auto py-1.5 text-xs"
+                    onClick={() => setCategoryId("all")}
+                  >
+                    <span className="flex-1 truncate">All Categories</span>
+                  </Button>
+                )}
+                {categories.map((c: any) => (
+                  <Button
+                    key={c.upstream_id}
+                    variant={categoryId === c.upstream_id ? "secondary" : "ghost"}
+                    className="w-full justify-start font-normal text-left h-auto py-1.5 text-xs"
+                    onClick={() => setCategoryId(c.upstream_id)}
+                  >
+                    <span className="flex-1 truncate">{c.name}</span>
+                    <span className="text-[10px] text-muted-foreground ml-2">{c.stream_count}</span>
+                  </Button>
+                ))}
               </div>
             </div>
-            <div className="flex-1 overflow-auto">
-              {availableQ.isLoading ? (
-                <div className="p-4 text-muted-foreground text-sm">
-                  <Loader2 className="inline size-4 animate-spin" /> Loading…
+
+            {/* Streams list */}
+            <div className="flex-1 flex flex-col min-w-0">
+              <div className="px-3 py-2 bg-muted/50 border-b border-border space-y-2">
+                <div className="text-xs font-medium">Available live streams</div>
+                <div className="relative">
+                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by stream or category name…"
+                    value={search}
+                    onChange={(e) => onSearchChange(e.target.value)}
+                    className="h-8 pl-7 text-sm"
+                  />
                 </div>
-              ) : (availableQ.data?.rows ?? []).length === 0 ? (
-                <div className="p-4 text-center text-muted-foreground text-sm">
-                  No streams found.
-                </div>
-              ) : (
-                <table className="w-full text-sm">
-                  <thead className="text-xs text-muted-foreground bg-muted/30 sticky top-0">
-                    <tr>
-                      <th className="text-left font-medium px-3 py-2">Name</th>
-                      <th className="text-left font-medium px-3 py-2 w-48">Category</th>
-                      <th className="w-10"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
+              </div>
+              <div className="flex-1 overflow-auto">
+                {availableQ.isLoading ? (
+                  <div className="p-4 text-muted-foreground text-sm">
+                    <Loader2 className="inline size-4 animate-spin" /> Loading…
+                  </div>
+                ) : (availableQ.data?.rows ?? []).length === 0 ? (
+                  <div className="p-4 text-center text-muted-foreground text-sm">
+                    No streams found.
+                  </div>
+                ) : (
+                  <ul>
                     {(availableQ.data?.rows ?? []).map((s: any) => {
                       const isLinked = linkedIds.has(s.upstream_id);
                       return (
-                        <tr key={s.upstream_id} className="border-t border-border hover:bg-muted/30">
-                          <td className="px-3 py-2">
-                            <div className="flex items-center gap-2 min-w-0">
-                              {s.stream_icon && (
-                                <img
-                                  src={s.stream_icon}
-                                  alt=""
-                                  className="size-6 rounded object-cover shrink-0"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).style.display = "none";
-                                  }}
-                                />
-                              )}
-                              <span className="truncate">{s.name}</span>
-                            </div>
-                          </td>
-                          <td className="px-3 py-2 text-muted-foreground truncate">{s.category_name ?? "—"}</td>
-                          <td className="px-2 py-2 text-right">
-                            <Button
-                              size="sm"
-                              variant={isLinked ? "ghost" : "outline"}
-                              disabled={isLinked || add.isPending}
-                              onClick={() => add.mutate(s.upstream_id)}
-                            >
-                              {isLinked ? "Added" : <Plus className="size-4" />}
-                            </Button>
-                          </td>
-                        </tr>
+                        <li
+                          key={s.upstream_id}
+                          className="flex items-center gap-2 px-3 py-2 border-b border-border last:border-0 hover:bg-muted/30"
+                        >
+                          {s.stream_icon && (
+                            <img
+                              src={s.stream_icon}
+                              alt=""
+                              className="size-6 rounded object-cover shrink-0"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = "none";
+                              }}
+                            />
+                          )}
+                          <span className="flex-1 truncate text-sm">{s.name}</span>
+                          <Button
+                            size="sm"
+                            variant={isLinked ? "ghost" : "outline"}
+                            disabled={isLinked || add.isPending}
+                            onClick={() => add.mutate(s.upstream_id)}
+                          >
+                            {isLinked ? "Added" : <Plus className="size-4" />}
+                          </Button>
+                        </li>
                       );
                     })}
-                  </tbody>
-                </table>
-              )}
-              {(availableQ.data?.total ?? 0) > (availableQ.data?.rows.length ?? 0) && (
-                <div className="p-2 text-center text-xs text-muted-foreground">
-                  Showing {availableQ.data?.rows.length} of {availableQ.data?.total}. Refine
-                  your search to narrow results.
-                </div>
-              )}
+                  </ul>
+                )}
+                {(availableQ.data?.total ?? 0) > (availableQ.data?.rows.length ?? 0) && (
+                  <div className="p-2 text-center text-xs text-muted-foreground">
+                    Showing {availableQ.data?.rows.length} of {availableQ.data?.total}. Refine
+                    your search to narrow results.
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
