@@ -388,5 +388,17 @@ export const getCustomCategoryStreams = createServerFn({ method: "GET" })
       .in("upstream_id", streamIds);
       
     if (streamsError) throw new Error(streamsError.message);
-    return streams ?? [];
+
+    const catIds = [...new Set((streams ?? []).map((s: any) => s.category_id).filter((id: any) => typeof id === "string" && id.length > 0))];
+    const { data: cats } = await supabaseAdmin
+      .from("categories")
+      .select("upstream_id,name")
+      .eq("type", "live")
+      .in("upstream_id", catIds);
+    const catMap = new Map((cats ?? []).map((c: any) => [c.upstream_id, c.name]));
+
+    return (streams ?? []).map((s: any) => ({
+      ...s,
+      category_name: catMap.get(s.category_id) ?? s.category_id,
+    }));
   });
