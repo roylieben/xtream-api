@@ -11,6 +11,7 @@ import {
   addStreamsToCustomCategory,
   removeStreamFromCustomCategory,
   getContent,
+  getCategories,
 } from "@/lib/admin.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
