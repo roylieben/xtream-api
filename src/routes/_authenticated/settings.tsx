@@ -195,8 +195,8 @@ function SettingsPage() {
           ))}
         </CardContent>
         <CardContent className="flex justify-end pt-0">
-          <Button onClick={() => save.mutate()} disabled={save.isPending}>
-            {save.isPending && <Loader2 className="size-4 animate-spin mr-2" />} Save sync intervals
+          <Button onClick={() => saveIntervals.mutate()} disabled={saveIntervals.isPending}>
+            {saveIntervals.isPending && <Loader2 className="size-4 animate-spin mr-2" />} Save sync intervals
           </Button>
         </CardContent>
       </Card>
