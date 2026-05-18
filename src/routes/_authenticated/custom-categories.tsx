@@ -76,6 +76,28 @@ function CustomCategoriesPage() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const rename = useMutation({
+    mutationFn: ({ id, name }: { id: number; name: string }) =>
+      renameCat({ data: { id, name } }),
+    onSuccess: () => {
+      toast.success("Category renamed");
+      setEditingId(null);
+      qc.invalidateQueries({ queryKey: ["custom-categories"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const startEdit = (c: { id: number; name: string }) => {
+    setEditingId(c.id);
+    setEditingName(c.name);
+  };
+  const commitEdit = () => {
+    if (editingId == null) return;
+    const trimmed = editingName.trim();
+    if (!trimmed) return;
+    rename.mutate({ id: editingId, name: trimmed });
+  };
+
   return (
     <div className="p-6 space-y-6 max-w-5xl">
       <div>
