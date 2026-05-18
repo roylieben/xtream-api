@@ -184,16 +184,34 @@ function ManageStreamsDialog({
   const qc = useQueryClient();
   const fetchLinked = useServerFn(getCustomCategoryStreams);
   const fetchAvailable = useServerFn(getContent);
+  const fetchCats = useServerFn(getCategories);
   const addStreams = useServerFn(addStreamsToCustomCategory);
   const removeStream = useServerFn(removeStreamFromCustomCategory);
 
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
+  const [categoryId, setCategoryId] = useState<string>("all");
+  const [showEnabledCatsOnly, setShowEnabledCatsOnly] = useState(true);
 
   const onSearchChange = (v: string) => {
     setSearch(v);
     setTimeout(() => setDebounced(v), 250);
   };
+
+  const { data: allCategories } = useQuery({
+    queryKey: ["categories", "live"],
+    queryFn: () => fetchCats({ data: { type: "live" } }),
+  });
+
+  const categories = (allCategories ?? []).filter((c: any) => (showEnabledCatsOnly ? c.enabled : true));
+
+  useEffect(() => {
+    if (showEnabledCatsOnly && categoryId === "all" && categories.length > 0) {
+      setCategoryId(categories[0].upstream_id);
+    } else if (!showEnabledCatsOnly && categoryId !== "all" && categories.length > 0 && !categories.some((c: any) => c.upstream_id === categoryId)) {
+      setCategoryId("all");
+    }
+  }, [showEnabledCatsOnly, categories, categoryId]);
 
   const linkedQ = useQuery({
     queryKey: ["custom-cat-streams", category.id],
@@ -201,10 +219,15 @@ function ManageStreamsDialog({
   });
 
   const availableQ = useQuery({
-    queryKey: ["live-search", debounced],
+    queryKey: ["live-search", debounced, categoryId],
     queryFn: () =>
       fetchAvailable({
-        data: { type: "live", search: debounced || undefined, page: 1 },
+        data: {
+          type: "live",
+          search: debounced || undefined,
+          categoryId: categoryId === "all" ? undefined : categoryId,
+          page: 1,
+        },
       }),
   });
 
