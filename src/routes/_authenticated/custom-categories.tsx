@@ -227,16 +227,47 @@ function ManageStreamsDialog({
           search: debounced || undefined,
           categoryId: categoryId === "all" ? undefined : categoryId,
           page: 1,
+          pageSize: 5000,
         },
       }),
   });
 
   const linkedIds = new Set((linkedQ.data ?? []).map((s: any) => s.upstream_id));
 
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // Reset selection when the filtered list changes
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [debounced, categoryId]);
+
+  const selectableRows = (availableQ.data?.rows ?? []).filter(
+    (s: any) => !linkedIds.has(s.upstream_id),
+  );
+
+  const toggleSelected = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    setSelectedIds(new Set(selectableRows.map((s: any) => s.upstream_id)));
+  };
+  const selectNone = () => setSelectedIds(new Set());
+
   const add = useMutation({
-    mutationFn: (streamId: string) =>
-      addStreams({ data: { categoryId: category.id, streamIds: [streamId] } }),
-    onSuccess: () => {
+    mutationFn: (streamIds: string[]) =>
+      addStreams({ data: { categoryId: category.id, streamIds } }),
+    onSuccess: (_d, vars) => {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        for (const id of vars) next.delete(id);
+        return next;
+      });
       qc.invalidateQueries({ queryKey: ["custom-cat-streams", category.id] });
     },
     onError: (e: any) => toast.error(e.message),
@@ -342,7 +373,28 @@ function ManageStreamsDialog({
             {/* Streams list */}
             <div className="flex-1 flex flex-col min-w-0">
               <div className="px-3 py-2 bg-muted/50 border-b border-border space-y-2">
-                <div className="text-xs font-medium">Available live streams</div>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-xs font-medium">
+                    Available live streams ({selectableRows.length})
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={selectAll} disabled={selectableRows.length === 0}>
+                      Select all
+                    </Button>
+                    <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={selectNone} disabled={selectedIds.size === 0}>
+                      Select none
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="h-7 text-xs"
+                      disabled={selectedIds.size === 0 || add.isPending}
+                      onClick={() => add.mutate(Array.from(selectedIds))}
+                    >
+                      {add.isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Plus className="size-3.5" />}
+                      Add selected ({selectedIds.size})
+                    </Button>
+                  </div>
+                </div>
                 <div className="relative">
                   <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
                   <Input
@@ -366,11 +418,21 @@ function ManageStreamsDialog({
                   <ul>
                     {(availableQ.data?.rows ?? []).map((s: any) => {
                       const isLinked = linkedIds.has(s.upstream_id);
+                      const isSelected = selectedIds.has(s.upstream_id);
                       return (
                         <li
                           key={s.upstream_id}
-                          className="flex items-center gap-2 px-3 py-2 border-b border-border last:border-0 hover:bg-muted/30"
+                          className={`flex items-center gap-2 px-3 py-2 border-b border-border last:border-0 ${isLinked ? "opacity-60" : "hover:bg-muted/30 cursor-pointer"}`}
+                          onClick={() => !isLinked && toggleSelected(s.upstream_id)}
                         >
+                          <input
+                            type="checkbox"
+                            className="size-4 shrink-0 accent-primary"
+                            checked={isSelected}
+                            disabled={isLinked}
+                            onChange={() => toggleSelected(s.upstream_id)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
                           {s.stream_icon && (
                             <img
                               src={s.stream_icon}
@@ -382,24 +444,13 @@ function ManageStreamsDialog({
                             />
                           )}
                           <span className="flex-1 truncate text-sm">{s.name}</span>
-                          <Button
-                            size="sm"
-                            variant={isLinked ? "ghost" : "outline"}
-                            disabled={isLinked || add.isPending}
-                            onClick={() => add.mutate(s.upstream_id)}
-                          >
-                            {isLinked ? "Added" : <Plus className="size-4" />}
-                          </Button>
+                          {isLinked && (
+                            <span className="text-xs text-muted-foreground">Added</span>
+                          )}
                         </li>
                       );
                     })}
                   </ul>
-                )}
-                {(availableQ.data?.total ?? 0) > (availableQ.data?.rows.length ?? 0) && (
-                  <div className="p-2 text-center text-xs text-muted-foreground">
-                    Showing {availableQ.data?.rows.length} of {availableQ.data?.total}. Refine
-                    your search to narrow results.
-                  </div>
                 )}
               </div>
             </div>
