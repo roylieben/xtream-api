@@ -253,10 +253,24 @@ export const getContent = createServerFn({ method: "GET" })
       .select("*", { count: "exact" })
       .order("name", { ascending: true })
       .range((page - 1) * pageSize, page * pageSize - 1);
-      
-    if (data.search) q = q.ilike("name", `%${data.search}%`);
+
+    if (data.search) {
+      // Match stream name OR streams whose category name matches the search.
+      const { data: matchCats } = await supabaseAdmin
+        .from("categories")
+        .select("upstream_id")
+        .eq("type", data.type)
+        .ilike("name", `%${data.search}%`);
+      const matchCatIds = (matchCats ?? []).map((c: any) => c.upstream_id);
+      const escaped = data.search.replace(/[,()]/g, " ");
+      const orParts = [`name.ilike.%${escaped}%`];
+      if (matchCatIds.length > 0) {
+        orParts.push(`category_id.in.(${matchCatIds.map((id) => `"${id}"`).join(",")})`);
+      }
+      q = q.or(orParts.join(","));
+    }
     if (data.categoryId && data.categoryId !== "all") q = q.eq("category_id", data.categoryId);
-    
+
     const { data: rows, count, error } = await q;
     if (error) throw new Error(error.message);
     
