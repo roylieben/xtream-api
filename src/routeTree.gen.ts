@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedCustomCategoriesRouteImport } from './routes/_authenticated/custom-categories'
 import { Route as AuthenticatedContentRouteImport } from './routes/_authenticated/content'
 import { Route as AuthenticatedCategoriesRouteImport } from './routes/_authenticated/categories'
 import { Route as ApiPublicXmltvDotphpRouteImport } from './routes/api/public/xmltv[.]php'
@@ -54,6 +55,12 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedCustomCategoriesRoute =
+  AuthenticatedCustomCategoriesRouteImport.update({
+    id: '/custom-categories',
+    path: '/custom-categories',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedContentRoute = AuthenticatedContentRouteImport.update({
   id: '/content',
   path: '/content',
@@ -109,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/categories': typeof AuthenticatedCategoriesRoute
   '/content': typeof AuthenticatedContentRoute
+  '/custom-categories': typeof AuthenticatedCustomCategoriesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -125,6 +133,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/categories': typeof AuthenticatedCategoriesRoute
   '/content': typeof AuthenticatedContentRoute
+  '/custom-categories': typeof AuthenticatedCustomCategoriesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -143,6 +152,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_authenticated/categories': typeof AuthenticatedCategoriesRoute
   '/_authenticated/content': typeof AuthenticatedContentRoute
+  '/_authenticated/custom-categories': typeof AuthenticatedCustomCategoriesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/categories'
     | '/content'
+    | '/custom-categories'
     | '/dashboard'
     | '/profile'
     | '/settings'
@@ -177,6 +188,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/categories'
     | '/content'
+    | '/custom-categories'
     | '/dashboard'
     | '/profile'
     | '/settings'
@@ -194,6 +206,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/_authenticated/categories'
     | '/_authenticated/content'
+    | '/_authenticated/custom-categories'
     | '/_authenticated/dashboard'
     | '/_authenticated/profile'
     | '/_authenticated/settings'
@@ -261,6 +274,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/custom-categories': {
+      id: '/_authenticated/custom-categories'
+      path: '/custom-categories'
+      fullPath: '/custom-categories'
+      preLoaderRoute: typeof AuthenticatedCustomCategoriesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/content': {
@@ -332,6 +352,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteChildren {
   AuthenticatedCategoriesRoute: typeof AuthenticatedCategoriesRoute
   AuthenticatedContentRoute: typeof AuthenticatedContentRoute
+  AuthenticatedCustomCategoriesRoute: typeof AuthenticatedCustomCategoriesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -340,6 +361,7 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedCategoriesRoute: AuthenticatedCategoriesRoute,
   AuthenticatedContentRoute: AuthenticatedContentRoute,
+  AuthenticatedCustomCategoriesRoute: AuthenticatedCustomCategoriesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
