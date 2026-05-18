@@ -52,6 +52,47 @@ const upstreamSchema = z.object({
   xtream_password: z.string().min(1).max(200),
 });
 
+const proxySchema = z.object({
+  proxy_username: z.string().trim().min(1).max(100),
+  proxy_password: z.string().min(1).max(200),
+});
+
+const intervalsSchema = z.object({
+  sync_interval_live_minutes: z.number().int().min(5).max(10080),
+  sync_interval_vod_minutes: z.number().int().min(5).max(10080),
+  sync_interval_series_minutes: z.number().int().min(5).max(10080),
+});
+
+const securitySchema = z.object({
+  disable_signup: z.boolean(),
+});
+
+async function patchSettings(patch: Record<string, unknown>) {
+  const { data: row } = await supabaseAdmin.from("app_settings").select("id").limit(1).single();
+  if (!row) throw new Error("Settings row missing");
+  const { error } = await supabaseAdmin
+    .from("app_settings")
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq("id", row.id);
+  if (error) throw new Error(error.message);
+  return { ok: true };
+}
+
+export const updateProxy = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => proxySchema.parse(d))
+  .handler(async ({ data }) => patchSettings(data));
+
+export const updateSyncIntervals = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => intervalsSchema.parse(d))
+  .handler(async ({ data }) => patchSettings(data));
+
+export const updateSecurity = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => securitySchema.parse(d))
+  .handler(async ({ data }) => patchSettings(data));
+
 export const testConnection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => {
