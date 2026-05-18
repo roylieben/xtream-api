@@ -60,6 +60,7 @@ function AuthLayout() {
           <NavLink to="/categories" icon={ListFilter}>Categories</NavLink>
           <NavLink to="/custom-categories" icon={FolderPlus}>Custom Categories</NavLink>
           <NavLink to="/content" icon={Database}>Content</NavLink>
+          <NavLink to="/users" icon={Users}>Users</NavLink>
         </nav>
         <div className="mt-auto pt-4 border-t border-sidebar-border">
           <div className="px-2 pb-2 text-xs text-muted-foreground truncate">{email}</div>
