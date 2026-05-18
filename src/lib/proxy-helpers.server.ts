@@ -38,33 +38,64 @@ export async function getEnabledCategoryIds(type: "live" | "vod" | "series"): Pr
   return new Set(data.filter((c: any) => c.type === type && c.enabled).map((c: any) => c.upstream_id));
 }
 
-export async function getEnabledLiveStreamIds(): Promise<Set<string>> {
-  // Get all enabled categories for live streams
-  const cats = await fetchAll("categories", "upstream_id,type,enabled");
-  const enabledCatIds = new Set(cats.filter((c: any) => c.type === "live" && c.enabled).map((c: any) => c.upstream_id));
-
-  // Get all live streams
-  const streams = await fetchAll("live_streams", "upstream_id,category_id");
-    
+// Stream upstream IDs that are linked to at least one enabled custom category.
+export async function getCustomCategoryLinkedStreamIds(): Promise<Set<string>> {
+  const cats = await fetchAll("custom_categories", "id,enabled");
+  const enabledIds = new Set(cats.filter((c: any) => c.enabled).map((c: any) => c.id));
+  if (enabledIds.size === 0) return new Set();
+  const links = await fetchAll("custom_category_streams", "custom_category_id,stream_upstream_id");
   return new Set(
-    streams
-      .filter((s: any) => enabledCatIds.has(String(s.category_id)))
-      .map((s: any) => String(s.upstream_id))
+    links
+      .filter((l: any) => enabledIds.has(l.custom_category_id))
+      .map((l: any) => String(l.stream_upstream_id)),
   );
 }
 
-export async function getEnabledLiveStreamEpgIds(): Promise<Set<string>> {
-  // Get all enabled categories for live streams
+// Map of enabled custom_category_id -> Set<stream_upstream_id>
+export async function getEnabledCustomCategoryMap(): Promise<Map<number, Set<string>>> {
+  const cats = await fetchAll("custom_categories", "id,name,enabled");
+  const enabled = cats.filter((c: any) => c.enabled);
+  const map = new Map<number, Set<string>>();
+  for (const c of enabled) map.set(c.id, new Set());
+  if (enabled.length === 0) return map;
+  const links = await fetchAll("custom_category_streams", "custom_category_id,stream_upstream_id");
+  for (const l of links) {
+    const set = map.get(l.custom_category_id);
+    if (set) set.add(String(l.stream_upstream_id));
+  }
+  return map;
+}
+
+export async function getEnabledLiveStreamIds(): Promise<Set<string>> {
   const cats = await fetchAll("categories", "upstream_id,type,enabled");
   const enabledCatIds = new Set(cats.filter((c: any) => c.type === "live" && c.enabled).map((c: any) => c.upstream_id));
 
-  // Get all live streams
-  const streams = await fetchAll("live_streams", "epg_channel_id,category_id");
-    
+  const streams = await fetchAll("live_streams", "upstream_id,category_id");
+  const ids = new Set(
+    streams
+      .filter((s: any) => enabledCatIds.has(String(s.category_id)))
+      .map((s: any) => String(s.upstream_id)),
+  );
+  // Include streams linked through any enabled custom category.
+  const customIds = await getCustomCategoryLinkedStreamIds();
+  for (const id of customIds) ids.add(id);
+  return ids;
+}
+
+export async function getEnabledLiveStreamEpgIds(): Promise<Set<string>> {
+  const cats = await fetchAll("categories", "upstream_id,type,enabled");
+  const enabledCatIds = new Set(cats.filter((c: any) => c.type === "live" && c.enabled).map((c: any) => c.upstream_id));
+
+  const streams = await fetchAll("live_streams", "upstream_id,epg_channel_id,category_id");
+  const customStreamIds = await getCustomCategoryLinkedStreamIds();
   return new Set(
     streams
-      .filter((s: any) => enabledCatIds.has(String(s.category_id)) && s.epg_channel_id)
-      .map((s: any) => String(s.epg_channel_id))
+      .filter(
+        (s: any) =>
+          s.epg_channel_id &&
+          (enabledCatIds.has(String(s.category_id)) || customStreamIds.has(String(s.upstream_id))),
+      )
+      .map((s: any) => String(s.epg_channel_id)),
   );
 }
 
