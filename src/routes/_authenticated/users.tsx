@@ -8,6 +8,7 @@ import {
   updateUserEmail,
   createUser,
   deleteUser,
+  getCurrentUserId,
 } from "@/lib/admin.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
