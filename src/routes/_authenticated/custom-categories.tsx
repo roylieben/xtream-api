@@ -189,12 +189,6 @@ function ManageStreamsDialog({
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
 
-  // Simple debounce
-  useState(() => {
-    const t = setTimeout(() => setDebounced(search), 300);
-    return () => clearTimeout(t);
-  });
-  // Re-debounce on change
   const onSearchChange = (v: string) => {
     setSearch(v);
     setTimeout(() => setDebounced(v), 250);
