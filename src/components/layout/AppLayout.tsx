@@ -10,6 +10,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     { title: "Content", href: "/content", icon: Tv },
     { title: "Categories", href: "/categories", icon: Server },
     { title: "Custom Categories", href: "/custom-categories", icon: FolderPlus },
+    { title: "Users", href: "/users", icon: Users },
     { title: "Settings", href: "/settings", icon: Settings },
   ];
 

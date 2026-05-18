@@ -7,6 +7,7 @@ import {
   createCustomCategory,
   deleteCustomCategory,
   setCustomCategoryEnabled,
+  renameCustomCategory,
   getCustomCategoryStreams,
   addStreamsToCustomCategory,
   removeStreamFromCustomCategory,
@@ -18,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Loader2, Plus, Trash2, X, Search } from "lucide-react";
+import { Loader2, Plus, Trash2, X, Search, Pencil, Check } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -37,9 +38,12 @@ function CustomCategoriesPage() {
   const createCat = useServerFn(createCustomCategory);
   const deleteCat = useServerFn(deleteCustomCategory);
   const toggleCat = useServerFn(setCustomCategoryEnabled);
+  const renameCat = useServerFn(renameCustomCategory);
 
   const [name, setName] = useState("");
   const [managing, setManaging] = useState<{ id: number; name: string } | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingName, setEditingName] = useState("");
 
   const { data: cats, isLoading } = useQuery({
     queryKey: ["custom-categories"],
@@ -71,6 +75,28 @@ function CustomCategoriesPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["custom-categories"] }),
     onError: (e: any) => toast.error(e.message),
   });
+
+  const rename = useMutation({
+    mutationFn: ({ id, name }: { id: number; name: string }) =>
+      renameCat({ data: { id, name } }),
+    onSuccess: () => {
+      toast.success("Category renamed");
+      setEditingId(null);
+      qc.invalidateQueries({ queryKey: ["custom-categories"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const startEdit = (c: { id: number; name: string }) => {
+    setEditingId(c.id);
+    setEditingName(c.name);
+  };
+  const commitEdit = () => {
+    if (editingId == null) return;
+    const trimmed = editingName.trim();
+    if (!trimmed) return;
+    rename.mutate({ id: editingId, name: trimmed });
+  };
 
   return (
     <div className="p-6 space-y-6 max-w-5xl">
@@ -129,7 +155,31 @@ function CustomCategoriesPage() {
               <tbody>
                 {(cats ?? []).map((c: any) => (
                   <tr key={c.id} className="border-t border-border">
-                    <td className="p-3">{c.name}</td>
+                    <td className="p-3">
+                      {editingId === c.id ? (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            autoFocus
+                            value={editingName}
+                            onChange={(e) => setEditingName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") commitEdit();
+                              if (e.key === "Escape") setEditingId(null);
+                            }}
+                            maxLength={200}
+                            className="h-8 max-w-xs"
+                          />
+                          <Button size="sm" variant="ghost" onClick={commitEdit} disabled={rename.isPending || !editingName.trim()}>
+                            {rename.isPending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}>
+                            <X className="size-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <span>{c.name}</span>
+                      )}
+                    </td>
                     <td className="p-3 text-right">
                       <Switch
                         checked={c.enabled}
@@ -138,6 +188,14 @@ function CustomCategoriesPage() {
                     </td>
                     <td className="p-3 text-right">
                       <div className="inline-flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => startEdit(c)}
+                          disabled={editingId === c.id}
+                        >
+                          <Pencil className="size-4" />
+                        </Button>
                         <Button
                           size="sm"
                           variant="outline"

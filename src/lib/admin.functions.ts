@@ -388,6 +388,20 @@ export const setCustomCategoryEnabled = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const renameCustomCategory = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ id: z.number().int(), name: z.string().trim().min(1).max(200) }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    const { error } = await supabaseAdmin
+      .from("custom_categories")
+      .update({ name: data.name })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 export const addStreamsToCustomCategory = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
@@ -463,4 +477,71 @@ export const getCustomCategoryStreams = createServerFn({ method: "GET" })
       ...s,
       category_name: catMap.get(s.category_id) ?? s.category_id,
     }));
+  });
+
+// ============= User management =============
+
+export const listUsers = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async () => {
+    const { data, error } = await supabaseAdmin.auth.admin.listUsers({ perPage: 200 });
+    if (error) throw new Error(error.message);
+    return (data.users ?? []).map((u) => ({
+      id: u.id,
+      email: u.email ?? "",
+      created_at: u.created_at,
+      last_sign_in_at: u.last_sign_in_at ?? null,
+      email_confirmed_at: u.email_confirmed_at ?? null,
+    }));
+  });
+
+export const updateUserPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ userId: z.string().uuid(), password: z.string().min(6).max(200) }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(data.userId, {
+      password: data.password,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const updateUserEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ userId: z.string().uuid(), email: z.string().email().max(255) }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(data.userId, {
+      email: data.email,
+      email_confirm: true,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const createUser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ email: z.string().email().max(255), password: z.string().min(6).max(200) }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    const { error } = await supabaseAdmin.auth.admin.createUser({
+      email: data.email,
+      password: data.password,
+      email_confirm: true,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const deleteUser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ userId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => {
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });
