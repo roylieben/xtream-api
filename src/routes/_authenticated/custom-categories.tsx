@@ -229,12 +229,12 @@ function ManageStreamsDialog({
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Manage streams — {category.name}</DialogTitle>
         </DialogHeader>
 
-        <div className="grid grid-cols-2 gap-4 min-h-[60vh]">
+        <div className="grid grid-cols-2 gap-4 flex-1 min-h-0 overflow-hidden">
           {/* Linked */}
           <div className="flex flex-col border border-border rounded-md overflow-hidden">
             <div className="px-3 py-2 bg-muted/50 text-xs font-medium border-b border-border">
