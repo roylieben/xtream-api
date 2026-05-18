@@ -7,6 +7,9 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async () => {
+    // Skip during SSR/prerender — there's no client session available.
+    // The client-side check below handles unauthenticated users.
+    if (typeof window === "undefined") return;
     const { data } = await supabase.auth.getUser();
     if (!data.user) throw redirect({ to: "/login" });
   },
