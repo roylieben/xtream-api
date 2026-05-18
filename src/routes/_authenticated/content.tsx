@@ -48,11 +48,13 @@ function Browser({ type }: { type: "live" | "vod" | "series" }) {
     }
   }, [showEnabledCatsOnly, categories, categoryId]);
   
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isFetching } = useQuery({
     queryKey: ["content", type, search, categoryId, page],
     queryFn: () => fetchContent({ data: { type, search: search || undefined, categoryId: categoryId === "all" ? undefined : categoryId, page } }),
+    enabled: allCategories !== undefined,
   });
   const pages = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1;
+  const showLoading = allCategories === undefined || isLoading || isFetching;
 
   return (
     <div className="flex gap-6 h-[calc(100vh-14rem)] min-h-[500px]">
@@ -100,7 +102,7 @@ function Browser({ type }: { type: "live" | "vod" | "series" }) {
         
         <Card className="flex-1 overflow-hidden flex flex-col">
           <CardContent className="p-0 flex-1 overflow-auto">
-            {isLoading ? (
+            {showLoading ? (
               <div className="p-8 text-center text-muted-foreground"><Loader2 className="inline size-4 animate-spin" /></div>
             ) : (
               <table className="w-full text-sm">

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { authProxy, getEnabledCategoryIds, jsonResponse, fetchAll, getEnabledCustomCategoryMap } from "@/lib/proxy-helpers.server";
-import { maybeRunDueSyncs } from "@/lib/sync.server";
+import { authProxy, getEnabledCategoryIds, jsonResponse, fetchAll, getEnabledCustomCategoryMap, xtream } from "@/lib/proxy-helpers.server";
+import { maybeRunDueSyncs, credsFromSettings } from "@/lib/sync.server";
 
 // Custom categories are exposed with a "custom_<id>" category_id to avoid
 // colliding with upstream numeric category IDs.
@@ -150,7 +150,15 @@ async function handle(request: Request): Promise<Response> {
         .select("info,movie_data")
         .eq("vod_id", id)
         .maybeSingle();
-      return jsonResponse(data ?? {});
+      if (data) return jsonResponse(data);
+      try {
+        const fetched = await xtream.vodInfo(credsFromSettings(s), id);
+        const row = { vod_id: id, info: fetched?.info ?? null, movie_data: fetched?.movie_data ?? null };
+        await supabaseAdmin.from("vod_info").upsert(row, { onConflict: "vod_id" });
+        return jsonResponse({ info: row.info, movie_data: row.movie_data });
+      } catch {
+        return jsonResponse({});
+      }
     }
     case "get_series_info": {
       const id = url.searchParams.get("series_id");
@@ -160,7 +168,20 @@ async function handle(request: Request): Promise<Response> {
         .select("info,seasons,episodes")
         .eq("series_id", id)
         .maybeSingle();
-      return jsonResponse(data ?? {});
+      if (data) return jsonResponse(data);
+      try {
+        const fetched = await xtream.seriesInfo(credsFromSettings(s), id);
+        const row = {
+          series_id: id,
+          info: fetched?.info ?? null,
+          seasons: fetched?.seasons ?? null,
+          episodes: fetched?.episodes ?? null,
+        };
+        await supabaseAdmin.from("series_info").upsert(row, { onConflict: "series_id" });
+        return jsonResponse({ info: row.info, seasons: row.seasons, episodes: row.episodes });
+      } catch {
+        return jsonResponse({});
+      }
     }
     case "get_short_epg":
     case "get_simple_data_table": {
