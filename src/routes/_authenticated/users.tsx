@@ -53,6 +53,12 @@ function UsersPage() {
     queryFn: () => fetchUsers(),
   });
 
+  const fetchMe = useServerFn(getCurrentUserId);
+  const { data: me } = useQuery({
+    queryKey: ["current-user-id"],
+    queryFn: () => fetchMe(),
+  });
+
   const pwMut = useMutation({
     mutationFn: (vars: { userId: string; password: string }) => setPassword({ data: vars }),
     onSuccess: () => {
