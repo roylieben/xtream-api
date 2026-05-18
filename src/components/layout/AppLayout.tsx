@@ -1,5 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Activity, Users, Server, Settings, Tv } from "lucide-react";
+import { Activity, Users, Server, Settings, Tv, FolderPlus } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarRail, SidebarFooter } from "@/components/ui/sidebar";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
