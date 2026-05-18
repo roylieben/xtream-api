@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { authProxy, getEnabledCategoryIds, jsonResponse, fetchAll, getEnabledCustomCategoryMap } from "@/lib/proxy-helpers.server";
-import { maybeRunDueSyncs } from "@/lib/sync.server";
+import { authProxy, getEnabledCategoryIds, jsonResponse, fetchAll, getEnabledCustomCategoryMap, xtream } from "@/lib/proxy-helpers.server";
+import { maybeRunDueSyncs, credsFromSettings } from "@/lib/sync.server";
 
 // Custom categories are exposed with a "custom_<id>" category_id to avoid
 // colliding with upstream numeric category IDs.
