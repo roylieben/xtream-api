@@ -38,9 +38,12 @@ function CustomCategoriesPage() {
   const createCat = useServerFn(createCustomCategory);
   const deleteCat = useServerFn(deleteCustomCategory);
   const toggleCat = useServerFn(setCustomCategoryEnabled);
+  const renameCat = useServerFn(renameCustomCategory);
 
   const [name, setName] = useState("");
   const [managing, setManaging] = useState<{ id: number; name: string } | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingName, setEditingName] = useState("");
 
   const { data: cats, isLoading } = useQuery({
     queryKey: ["custom-categories"],
