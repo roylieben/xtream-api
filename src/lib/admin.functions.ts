@@ -278,6 +278,24 @@ export const getContent = createServerFn({ method: "GET" })
       .select("*", { count: "exact" })
       .range((page - 1) * pageSize, page * pageSize - 1);
 
+    // Custom-category filter (live only): resolve linked stream upstream IDs.
+    if (data.type === "live" && data.categoryId && data.categoryId.startsWith(CUSTOM_CAT_PREFIX)) {
+      const customId = Number(data.categoryId.slice(CUSTOM_CAT_PREFIX.length));
+      if (Number.isFinite(customId)) {
+        const { data: links } = await supabaseAdmin
+          .from("custom_category_streams")
+          .select("stream_upstream_id")
+          .eq("custom_category_id", customId);
+        const ids = (links ?? []).map((l: any) => l.stream_upstream_id);
+        if (ids.length === 0) {
+          return { rows: [], total: 0, page, pageSize };
+        }
+        q = q.in("upstream_id", ids);
+      }
+    } else if (data.categoryId && data.categoryId !== "all") {
+      q = q.eq("category_id", data.categoryId);
+    }
+
     if (data.search) {
       const { data: matchCats } = await supabaseAdmin
         .from("categories")
@@ -292,7 +310,6 @@ export const getContent = createServerFn({ method: "GET" })
       }
       q = q.or(orParts.join(","));
     }
-    if (data.categoryId && data.categoryId !== "all") q = q.eq("category_id", data.categoryId);
 
     const { data: rows, count, error } = await q;
     if (error) throw new Error(error.message);
