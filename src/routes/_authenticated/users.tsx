@@ -158,6 +158,8 @@ function UsersPage() {
                         <Button
                           size="sm"
                           variant="outline"
+                          disabled={me?.userId === u.id}
+                          title={me?.userId === u.id ? "You cannot delete your own account" : undefined}
                           onClick={() => {
                             if (confirm(`Delete user "${u.email}"? This cannot be undone.`))
                               delMut.mutate(u.id);
