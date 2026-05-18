@@ -155,7 +155,31 @@ function CustomCategoriesPage() {
               <tbody>
                 {(cats ?? []).map((c: any) => (
                   <tr key={c.id} className="border-t border-border">
-                    <td className="p-3">{c.name}</td>
+                    <td className="p-3">
+                      {editingId === c.id ? (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            autoFocus
+                            value={editingName}
+                            onChange={(e) => setEditingName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") commitEdit();
+                              if (e.key === "Escape") setEditingId(null);
+                            }}
+                            maxLength={200}
+                            className="h-8 max-w-xs"
+                          />
+                          <Button size="sm" variant="ghost" onClick={commitEdit} disabled={rename.isPending || !editingName.trim()}>
+                            {rename.isPending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}>
+                            <X className="size-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <span>{c.name}</span>
+                      )}
+                    </td>
                     <td className="p-3 text-right">
                       <Switch
                         checked={c.enabled}
