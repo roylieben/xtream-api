@@ -244,8 +244,8 @@ export function maybeRunDueSyncs(): void {
       const due = (last: string | null | undefined, mins: number | null | undefined) =>
         !last || now - new Date(last).getTime() >= (mins ?? 0) * 60_000;
       if (due(s.last_sync_live_at, s.sync_interval_live_minutes)) syncLive().catch(() => {});
-      if (due(s.last_sync_vod_at, s.sync_interval_vod_minutes)) syncVod({ withInfo: true }).catch(() => {});
-      if (due(s.last_sync_series_at, s.sync_interval_series_minutes)) syncSeries({ withInfo: true }).catch(() => {});
+      if (due(s.last_sync_vod_at, s.sync_interval_vod_minutes)) syncVod().catch(() => {});
+      if (due(s.last_sync_series_at, s.sync_interval_series_minutes)) syncSeries().catch(() => {});
     } catch {
       /* swallow */
     }
