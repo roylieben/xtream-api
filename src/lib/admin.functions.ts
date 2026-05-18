@@ -388,9 +388,9 @@ export const getCustomCategoryStreams = createServerFn({ method: "GET" })
     const streamIds = relations.map((r: any) => r.stream_upstream_id);
     const { data: streams, error: streamsError } = await supabaseAdmin
       .from("live_streams")
-      .select("id, upstream_id, name, stream_icon, category_id")
+      .select("id, upstream_id, name, stream_icon, category_id, num")
       .in("upstream_id", streamIds);
-      
+
     if (streamsError) throw new Error(streamsError.message);
 
     const catIds = [...new Set((streams ?? []).map((s: any) => s.category_id).filter((id: any) => typeof id === "string" && id.length > 0))];
@@ -401,7 +401,18 @@ export const getCustomCategoryStreams = createServerFn({ method: "GET" })
       .in("upstream_id", catIds);
     const catMap = new Map((cats ?? []).map((c: any) => [c.upstream_id, c.name]));
 
-    return (streams ?? []).map((s: any) => ({
+    const sorted = [...(streams ?? [])].sort((a: any, b: any) => {
+      const na = parseInt(a.num ?? "", 10);
+      const nb = parseInt(b.num ?? "", 10);
+      const aHas = Number.isFinite(na);
+      const bHas = Number.isFinite(nb);
+      if (aHas && bHas && na !== nb) return na - nb;
+      if (aHas && !bHas) return -1;
+      if (!aHas && bHas) return 1;
+      return String(a.name ?? "").localeCompare(String(b.name ?? ""));
+    });
+
+    return sorted.map((s: any) => ({
       ...s,
       category_name: catMap.get(s.category_id) ?? s.category_id,
     }));
