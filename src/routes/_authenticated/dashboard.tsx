@@ -41,6 +41,13 @@ function Dashboard() {
     refetchInterval: 5000,
   });
 
+  const fetchMonthly = useServerFn(getMonthlyAdditions);
+  const { data: monthly } = useQuery({
+    queryKey: ["monthly-additions"],
+    queryFn: () => fetchMonthly(),
+  });
+
+
   const test = useMutation({
     mutationFn: () => doTest(),
     onSuccess: (r: any) =>
