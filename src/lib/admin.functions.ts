@@ -314,9 +314,10 @@ export const getRecentlyAdded = createServerFn({ method: "GET" })
       | "vod_streams"
       | "series";
     const limit = data.limit ?? 50;
+    const iconCol = data.type === "series" ? "cover" : "stream_icon";
     const { data: rows, error } = await supabaseAdmin
       .from(table)
-      .select("id, upstream_id, name, category_id, stream_icon, created_at")
+      .select(`id, upstream_id, name, category_id, ${iconCol}, created_at`)
       .order("created_at", { ascending: false })
       .limit(limit);
     if (error) throw new Error(error.message);
