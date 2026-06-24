@@ -349,20 +349,31 @@ export const getRecentlyAdded = createServerFn({ method: "GET" })
 export const getMonthlyAdditions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async () => {
+    const tables = ["live_streams", "vod_streams", "series"] as const;
+    const earliestRes = await Promise.all(
+      tables.map((t) =>
+        supabaseAdmin.from(t).select("created_at").order("created_at", { ascending: true }).limit(1).maybeSingle(),
+      ),
+    );
+    const earliestDates = earliestRes
+      .map((r) => r.data?.created_at)
+      .filter((d): d is string => !!d)
+      .map((d) => new Date(d));
+    const earliest = earliestDates.length ? new Date(Math.min(...earliestDates.map((d) => d.getTime()))) : null;
+    const earliestMonth = earliest ? new Date(Date.UTC(earliest.getUTCFullYear(), earliest.getUTCMonth(), 1)) : null;
+
     const now = new Date();
-    const months: { label: string; year: number; month: number; start: string; end: string }[] = [];
-    for (let i = 5; i >= 0; i--) {
+    const months: { label: string; start: string; end: string }[] = [];
+    for (let i = 0; i < 6; i++) {
       const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
+      if (earliestMonth && d.getTime() < earliestMonth.getTime()) break;
       const next = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1));
       months.push({
         label: d.toLocaleString("en-US", { month: "short", year: "numeric", timeZone: "UTC" }),
-        year: d.getUTCFullYear(),
-        month: d.getUTCMonth(),
         start: d.toISOString(),
         end: next.toISOString(),
       });
     }
-    const tables = ["live_streams", "vod_streams", "series"] as const;
     const results = await Promise.all(
       months.flatMap((m) =>
         tables.map(async (t) => {
@@ -382,6 +393,7 @@ export const getMonthlyAdditions = createServerFn({ method: "GET" })
       series: results.find((r) => r.label === m.label && r.table === "series")?.count ?? 0,
     }));
   });
+
 
 
 

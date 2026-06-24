@@ -107,73 +107,48 @@ function Dashboard() {
             ["live", "Live", data.settings?.last_sync_live_at, data.settings?.sync_interval_live_minutes],
             ["vod", "VOD", data.settings?.last_sync_vod_at, data.settings?.sync_interval_vod_minutes],
             ["series", "Series", data.settings?.last_sync_series_at, data.settings?.sync_interval_series_minutes],
-          ] as const).map(([key, label, last, mins]) => (
-            <div key={key} className="rounded-md border border-border p-4 space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="font-medium">{label}</div>
-                <Badge variant="outline">every {mins}m</Badge>
+          ] as const).map(([key, label, last, mins]) => {
+            const run = data.runs.find((r: any) => r.type === key);
+            const status = run?.status as "success" | "error" | "running" | undefined;
+            const borderClass =
+              status === "success" ? "border-emerald-500/40"
+              : status === "error" ? "border-destructive/60"
+              : status === "running" ? "border-primary/50"
+              : "border-border";
+            const statusBadge =
+              status === "success" ? <span className="inline-flex items-center gap-1 text-emerald-400 text-xs"><CheckCircle2 className="size-3.5" />success</span>
+              : status === "error" ? <span className="inline-flex items-center gap-1 text-destructive text-xs"><XCircle className="size-3.5" />error</span>
+              : status === "running" ? <span className="inline-flex items-center gap-1 text-primary text-xs"><Loader2 className="size-3.5 animate-spin" />running</span>
+              : <span className="text-xs text-muted-foreground">no runs</span>;
+            return (
+              <div key={key} className={`rounded-md border p-4 space-y-2 ${borderClass}`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="font-medium">{label}</div>
+                    {statusBadge}
+                  </div>
+                  <Badge variant="outline">every {mins}m</Badge>
+                </div>
+                <div className="text-xs text-muted-foreground">Last: {lastSync(last as any)}</div>
+                {run?.message ? (
+                  <div className="text-xs text-muted-foreground truncate" title={run.message}>{run.message}</div>
+                ) : null}
+                {status === "running" ? (
+                  <Button size="sm" variant="outline" className="w-full" onClick={() => cancelRun.mutate(run!.id)} disabled={cancelRun.isPending && cancelRun.variables === run!.id}>
+                    Cancel
+                  </Button>
+                ) : (
+                  <Button size="sm" variant="secondary" className="w-full" onClick={() => sync.mutate(key)} disabled={sync.isPending}>
+                    <RefreshCw className={`size-3.5 ${sync.isPending && sync.variables === key ? "animate-spin" : ""}`} />
+                    Sync now
+                  </Button>
+                )}
               </div>
-              <div className="text-xs text-muted-foreground">Last: {lastSync(last as any)}</div>
-              <Button size="sm" variant="secondary" className="w-full" onClick={() => sync.mutate(key)} disabled={sync.isPending}>
-                <RefreshCw className={`size-3.5 ${sync.isPending && sync.variables === key ? "animate-spin" : ""}`} />
-                Sync now
-              </Button>
-            </div>
-          ))}
+            );
+          })}
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader><CardTitle className="text-base">Latest sync results</CardTitle></CardHeader>
-        <CardContent className="p-0">
-          <table className="w-full text-sm">
-            <thead className="text-xs text-muted-foreground bg-muted/50">
-              <tr>
-                <th className="text-left p-3 font-medium">Type</th>
-                <th className="text-left p-3 font-medium">Status</th>
-                <th className="text-left p-3 font-medium">Started</th>
-                <th className="text-left p-3 font-medium">Items</th>
-                <th className="text-left p-3 font-medium">Message</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(() => {
-                const latest = (["live", "vod", "series"] as const).map((t) => ({
-                  type: t,
-                  run: data.runs.find((r: any) => r.type === t),
-                }));
-                if (latest.every((l) => !l.run)) {
-                  return <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">No runs yet</td></tr>;
-                }
-                return latest.map(({ type, run }) => (
-                  <tr key={type} className="border-t border-border">
-                    <td className="p-3 font-mono text-xs">{type}</td>
-                    {run ? (
-                      <>
-                        <td className="p-3">
-                          {run.status === "success" ? <span className="inline-flex items-center gap-1 text-emerald-400"><CheckCircle2 className="size-3.5" />success</span>
-                            : run.status === "error" ? <span className="inline-flex items-center gap-1 text-destructive"><XCircle className="size-3.5" />error</span>
-                            : (
-                              <div className="flex items-center gap-2">
-                                <span className="inline-flex items-center gap-1 text-primary"><Loader2 className="size-3.5 animate-spin" />running</span>
-                                <Button size="sm" variant="outline" className="h-6 px-2 text-xs" onClick={() => cancelRun.mutate(run.id)} disabled={cancelRun.isPending && cancelRun.variables === run.id}>Cancel</Button>
-                              </div>
-                            )}
-                        </td>
-                        <td className="p-3 text-muted-foreground">{run.started_at ? formatDistanceToNow(new Date(run.started_at), { addSuffix: true }) : "—"}</td>
-                        <td className="p-3 tabular-nums">{run.items_processed ?? 0}</td>
-                        <td className="p-3 text-muted-foreground truncate max-w-md">{run.message ?? "—"}</td>
-                      </>
-                    ) : (
-                      <td colSpan={4} className="p-3 text-muted-foreground">No runs yet</td>
-                    )}
-                  </tr>
-                ));
-              })()}
-            </tbody>
-          </table>
-        </CardContent>
-      </Card>
       <Card>
         <CardHeader><CardTitle className="text-base">Recently added — last 6 months</CardTitle></CardHeader>
         <CardContent className="p-0">
