@@ -24,6 +24,9 @@ export type Database = {
           last_sync_vod_at: string | null
           proxy_password: string | null
           proxy_username: string | null
+          sync_auto_live: boolean
+          sync_auto_series: boolean
+          sync_auto_vod: boolean
           sync_interval_live_minutes: number | null
           sync_interval_series_minutes: number | null
           sync_interval_vod_minutes: number | null
@@ -41,6 +44,9 @@ export type Database = {
           last_sync_vod_at?: string | null
           proxy_password?: string | null
           proxy_username?: string | null
+          sync_auto_live?: boolean
+          sync_auto_series?: boolean
+          sync_auto_vod?: boolean
           sync_interval_live_minutes?: number | null
           sync_interval_series_minutes?: number | null
           sync_interval_vod_minutes?: number | null
@@ -58,6 +64,9 @@ export type Database = {
           last_sync_vod_at?: string | null
           proxy_password?: string | null
           proxy_username?: string | null
+          sync_auto_live?: boolean
+          sync_auto_series?: boolean
+          sync_auto_vod?: boolean
           sync_interval_live_minutes?: number | null
           sync_interval_series_minutes?: number | null
           sync_interval_vod_minutes?: number | null
