@@ -49,6 +49,9 @@ function SettingsPage() {
           sync_interval_live_minutes: Number(form.sync_interval_live_minutes),
           sync_interval_vod_minutes: Number(form.sync_interval_vod_minutes),
           sync_interval_series_minutes: Number(form.sync_interval_series_minutes),
+          sync_auto_live: !!form.sync_auto_live,
+          sync_auto_vod: !!form.sync_auto_vod,
+          sync_auto_series: !!form.sync_auto_series,
         },
       }),
     onSuccess: () => onSaved("Sync intervals"),
@@ -183,14 +186,32 @@ function SettingsPage() {
           <CardDescription>How often each section is refreshed when traffic hits the proxy.</CardDescription>
         </CardHeader>
         <CardContent className="grid md:grid-cols-3 gap-4">
-          {[
-            ["sync_interval_live_minutes", "Live"],
-            ["sync_interval_vod_minutes", "VOD"],
-            ["sync_interval_series_minutes", "Series"],
-          ].map(([k, label]) => (
-            <div key={k} className="space-y-2">
-              <Label>{label}</Label>
-              <Input type="number" min={5} max={10080} value={form[k]} onChange={(e) => set(k, e.target.value)} />
+          {([
+            ["sync_interval_live_minutes", "sync_auto_live", "Live"],
+            ["sync_interval_vod_minutes", "sync_auto_vod", "VOD"],
+            ["sync_interval_series_minutes", "sync_auto_series", "Series"],
+          ] as const).map(([k, autoKey, label]) => (
+            <div key={k} className="space-y-2 rounded-md border border-border p-3">
+              <div className="flex items-center justify-between">
+                <Label>{label}</Label>
+                <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="size-4 rounded border-gray-300"
+                    checked={!!form[autoKey]}
+                    onChange={(e) => set(autoKey, e.target.checked)}
+                  />
+                  Auto
+                </label>
+              </div>
+              <Input
+                type="number"
+                min={5}
+                max={10080}
+                value={form[k]}
+                disabled={!form[autoKey]}
+                onChange={(e) => set(k, e.target.value)}
+              />
             </div>
           ))}
         </CardContent>
