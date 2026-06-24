@@ -1,4 +1,5 @@
 import { createStart, createMiddleware } from "@tanstack/react-start";
+import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
 
 
 
@@ -30,6 +31,7 @@ const authedFetch: typeof fetch = async (input, init) => {
 };
 
 export const startInstance = createStart(() => ({
+  functionMiddleware: [attachSupabaseAuth],
   requestMiddleware: [errorMiddleware],
   serverFns: { fetch: authedFetch },
 }));
