@@ -21,6 +21,7 @@ import { Route as AuthenticatedContentRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedCategoriesRouteImport } from './routes/_authenticated/categories'
 import { Route as ApiPublicXmltvDotphpRouteImport } from './routes/api/public/xmltv[.]php'
 import { Route as ApiPublicPlayer_apiDotphpRouteImport } from './routes/api/public/player_api[.]php'
+import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicGetDotphpRouteImport } from './routes/api/public/get[.]php'
 import { Route as ApiPublicCronRouteImport } from './routes/api/public/cron'
 import { Route as ApiPublicSeriesUserPassFileRouteImport } from './routes/api/public/series/$user/$pass/$file'
@@ -88,6 +89,11 @@ const ApiPublicPlayer_apiDotphpRoute =
     path: '/api/public/player_api.php',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
+  id: '/api/public/health',
+  path: '/api/public/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicGetDotphpRoute = ApiPublicGetDotphpRouteImport.update({
   id: '/api/public/get.php',
   path: '/api/public/get.php',
@@ -129,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/users': typeof AuthenticatedUsersRoute
   '/api/public/cron': typeof ApiPublicCronRoute
   '/api/public/get.php': typeof ApiPublicGetDotphpRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/player_api.php': typeof ApiPublicPlayer_apiDotphpRoute
   '/api/public/xmltv.php': typeof ApiPublicXmltvDotphpRoute
   '/api/public/live/$user/$pass/$file': typeof ApiPublicLiveUserPassFileRoute
@@ -147,6 +154,7 @@ export interface FileRoutesByTo {
   '/users': typeof AuthenticatedUsersRoute
   '/api/public/cron': typeof ApiPublicCronRoute
   '/api/public/get.php': typeof ApiPublicGetDotphpRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/player_api.php': typeof ApiPublicPlayer_apiDotphpRoute
   '/api/public/xmltv.php': typeof ApiPublicXmltvDotphpRoute
   '/api/public/live/$user/$pass/$file': typeof ApiPublicLiveUserPassFileRoute
@@ -167,6 +175,7 @@ export interface FileRoutesById {
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/api/public/cron': typeof ApiPublicCronRoute
   '/api/public/get.php': typeof ApiPublicGetDotphpRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/player_api.php': typeof ApiPublicPlayer_apiDotphpRoute
   '/api/public/xmltv.php': typeof ApiPublicXmltvDotphpRoute
   '/api/public/live/$user/$pass/$file': typeof ApiPublicLiveUserPassFileRoute
@@ -187,6 +196,7 @@ export interface FileRouteTypes {
     | '/users'
     | '/api/public/cron'
     | '/api/public/get.php'
+    | '/api/public/health'
     | '/api/public/player_api.php'
     | '/api/public/xmltv.php'
     | '/api/public/live/$user/$pass/$file'
@@ -205,6 +215,7 @@ export interface FileRouteTypes {
     | '/users'
     | '/api/public/cron'
     | '/api/public/get.php'
+    | '/api/public/health'
     | '/api/public/player_api.php'
     | '/api/public/xmltv.php'
     | '/api/public/live/$user/$pass/$file'
@@ -224,6 +235,7 @@ export interface FileRouteTypes {
     | '/_authenticated/users'
     | '/api/public/cron'
     | '/api/public/get.php'
+    | '/api/public/health'
     | '/api/public/player_api.php'
     | '/api/public/xmltv.php'
     | '/api/public/live/$user/$pass/$file'
@@ -237,6 +249,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ApiPublicCronRoute: typeof ApiPublicCronRoute
   ApiPublicGetDotphpRoute: typeof ApiPublicGetDotphpRoute
+  ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicPlayer_apiDotphpRoute: typeof ApiPublicPlayer_apiDotphpRoute
   ApiPublicXmltvDotphpRoute: typeof ApiPublicXmltvDotphpRoute
   ApiPublicLiveUserPassFileRoute: typeof ApiPublicLiveUserPassFileRoute
@@ -330,6 +343,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPlayer_apiDotphpRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/health': {
+      id: '/api/public/health'
+      path: '/api/public/health'
+      fullPath: '/api/public/health'
+      preLoaderRoute: typeof ApiPublicHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/get.php': {
       id: '/api/public/get.php'
       path: '/api/public/get.php'
@@ -398,6 +418,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ApiPublicCronRoute: ApiPublicCronRoute,
   ApiPublicGetDotphpRoute: ApiPublicGetDotphpRoute,
+  ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicPlayer_apiDotphpRoute: ApiPublicPlayer_apiDotphpRoute,
   ApiPublicXmltvDotphpRoute: ApiPublicXmltvDotphpRoute,
   ApiPublicLiveUserPassFileRoute: ApiPublicLiveUserPassFileRoute,

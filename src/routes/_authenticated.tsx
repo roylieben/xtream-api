@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { LayoutDashboard, Settings, ListFilter, Database, LogOut, Radio, FolderPlus, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ServiceStatus } from "@/components/ServiceStatus";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async () => {
@@ -63,6 +64,7 @@ function AuthLayout() {
           <NavLink to="/users" icon={Users}>Users</NavLink>
         </nav>
         <div className="mt-auto pt-4 border-t border-sidebar-border">
+          <ServiceStatus />
           <div className="px-2 pb-2 text-xs text-muted-foreground truncate">{email}</div>
           <Button variant="ghost" size="sm" className="w-full justify-start" onClick={signOut}>
             <LogOut className="size-4" /> Sign out
