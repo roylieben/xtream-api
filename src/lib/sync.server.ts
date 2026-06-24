@@ -20,6 +20,15 @@ async function checkCancelled(id?: number) {
   }
 }
 
+async function reportProgress(id: number | undefined, items: number, message: string) {
+  if (!id) return;
+  await supabaseAdmin
+    .from("sync_runs")
+    .update({ items_processed: items, message })
+    .eq("id", id)
+    .eq("status", "running");
+}
+
 async function logRun(type: string, fn: (id?: number) => Promise<{ items: number; message?: string }>) {
   // Cancel any existing running syncs of this type
   await supabaseAdmin
