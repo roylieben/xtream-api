@@ -122,7 +122,7 @@ function SyncPage() {
             <div className="px-4 pt-4">
               <TabsList>
                 <TabsTrigger value="live">Live</TabsTrigger>
-                <TabsTrigger value="live">Live</TabsTrigger>
+
                 <TabsTrigger value="vod">Movies</TabsTrigger>
                 <TabsTrigger value="series">Series</TabsTrigger>
               </TabsList>
