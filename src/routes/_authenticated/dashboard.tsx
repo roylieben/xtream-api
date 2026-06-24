@@ -153,7 +153,7 @@ function Dashboard() {
                               </div>
                             )}
                         </td>
-                        <td className="p-3 text-muted-foreground">{formatDistanceToNow(new Date(run.started_at), { addSuffix: true })}</td>
+                        <td className="p-3 text-muted-foreground">{run.started_at ? formatDistanceToNow(new Date(run.started_at), { addSuffix: true }) : "—"}</td>
                         <td className="p-3 tabular-nums">{run.items_processed ?? 0}</td>
                         <td className="p-3 text-muted-foreground truncate max-w-md">{run.message ?? "—"}</td>
                       </>
