@@ -48,7 +48,7 @@ function AuthLayout() {
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
-      <aside className="w-60 shrink-0 border-r border-sidebar-border bg-sidebar p-4 flex flex-col">
+      <aside className="w-60 shrink-0 border-r border-sidebar-border bg-sidebar p-4 flex flex-col sticky top-0 h-screen">
         <div className="flex items-center gap-2 px-2 pb-6">
           <div className="grid size-8 place-items-center rounded-md bg-primary text-primary-foreground">
             <Radio className="size-4" />
