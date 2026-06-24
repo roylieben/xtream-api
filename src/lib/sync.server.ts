@@ -92,9 +92,11 @@ export async function syncLive() {
   return logRun("live", async (id) => {
     const s = await getSettingsRow();
     const c = credsFromSettings(s);
+    await reportProgress(id, 0, "Fetching categories…");
     const cats = await xtream.liveCategories(c);
     await checkCancelled(id);
     await upsertCategories("live", cats);
+    await reportProgress(id, 0, `Fetched ${cats.length} categories, fetching streams…`);
     const list = await xtream.liveStreams(c);
     const rows = list.map((it: any) => ({
       upstream_id: String(it.stream_id),
@@ -110,10 +112,13 @@ export async function syncLive() {
       num: it.num ?? null,
       raw: it,
     }));
+    let done = 0;
     for (const part of chunks(rows, 500)) {
       await checkCancelled(id);
       const { error } = await supabaseAdmin.from("live_streams").upsert(part, { onConflict: "upstream_id" });
       if (error) throw new Error(`live_streams upsert: ${error.message}`);
+      done += part.length;
+      await reportProgress(id, done, `Upserting streams ${done}/${rows.length}`);
     }
     await supabaseAdmin
       .from("app_settings")
