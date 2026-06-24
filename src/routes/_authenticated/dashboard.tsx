@@ -125,9 +125,7 @@ function Dashboard() {
                     {statusBadge}
                   </div>
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  every {mins}m · {catsForType.toLocaleString()} categories · {streamsForType.toLocaleString()} streams
-                </div>
+                <div className="text-xs text-muted-foreground">every {mins}m</div>
                 <div className="text-xs text-muted-foreground">Last: {lastSync(last as any)}</div>
                 {run?.message ? (
                   <div className="text-xs text-muted-foreground truncate" title={run.message}>{run.message}</div>
