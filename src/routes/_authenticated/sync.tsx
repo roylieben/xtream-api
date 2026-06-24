@@ -22,15 +22,11 @@ function RecentlyAddedList({ type }: { type: "live" | "vod" | "series" }) {
   const [enabledOnly, setEnabledOnly] = useState(true);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["recently-added", type],
-    queryFn: () => fetchRecent({ data: { type, limit: 50 } }),
+    queryKey: ["recently-added", type, search, enabledOnly],
+    queryFn: () => fetchRecent({ data: { type, limit: 30, enabledOnly, search: search || undefined } }),
   });
 
-  const filtered = (data ?? []).filter((r: any) => {
-    if (enabledOnly && !r.category_enabled) return false;
-    if (search && !String(r.category_name ?? "").toLowerCase().includes(search.toLowerCase())) return false;
-    return true;
-  });
+  const rows = data ?? [];
 
   return (
     <div className="p-4 space-y-3">
@@ -43,7 +39,7 @@ function RecentlyAddedList({ type }: { type: "live" | "vod" | "series" }) {
       </div>
       {isLoading ? (
         <div className="p-6 text-muted-foreground"><Loader2 className="inline size-4 animate-spin" /> Loading…</div>
-      ) : filtered.length === 0 ? (
+      ) : rows.length === 0 ? (
         <div className="p-6 text-center text-muted-foreground">Nothing here yet</div>
       ) : (
         <table className="w-full text-sm">
@@ -55,7 +51,7 @@ function RecentlyAddedList({ type }: { type: "live" | "vod" | "series" }) {
             </tr>
           </thead>
           <tbody>
-            {filtered.map((r: any) => (
+            {rows.map((r: any) => (
               <tr key={r.id} className="border-t border-border">
                 <td className="p-3">
                   <div className="flex items-center gap-2">
@@ -74,10 +70,13 @@ function RecentlyAddedList({ type }: { type: "live" | "vod" | "series" }) {
   );
 }
 
+
 function SyncPage() {
   const fetchStats = useServerFn(getStats);
   const qc = useQueryClient();
   const [tab, setTab] = useState<"live" | "vod" | "series">("live");
+  const [runsTab, setRunsTab] = useState<"all" | "live" | "vod" | "series">("all");
+
 
   const { data, isLoading } = useQuery({
     queryKey: ["stats"],
@@ -104,43 +103,59 @@ function SyncPage() {
       <Card>
         <CardHeader><CardTitle className="text-base">Recent sync runs</CardTitle></CardHeader>
         <CardContent className="p-0">
-          <table className="w-full text-sm">
-            <thead className="text-xs text-muted-foreground bg-muted/50">
-              <tr>
-                <th className="text-left p-3 font-medium">Type</th>
-                <th className="text-left p-3 font-medium">Status</th>
-                <th className="text-left p-3 font-medium">Started</th>
-                <th className="text-left p-3 font-medium">Items</th>
-                <th className="text-left p-3 font-medium">Message</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading || !data ? (
-                <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">Loading…</td></tr>
-              ) : data.runs.length === 0 ? (
-                <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">No runs yet</td></tr>
-              ) : data.runs.map((r: any) => (
-                <tr key={r.id} className="border-t border-border">
-                  <td className="p-3 font-mono text-xs">{r.type}</td>
-                  <td className="p-3">
-                    {r.status === "success" ? <span className="inline-flex items-center gap-1 text-emerald-400"><CheckCircle2 className="size-3.5" />success</span>
-                      : r.status === "error" ? <span className="inline-flex items-center gap-1 text-destructive"><XCircle className="size-3.5" />error</span>
-                      : (
-                        <div className="flex items-center gap-2">
-                          <span className="inline-flex items-center gap-1 text-primary"><Loader2 className="size-3.5 animate-spin" />running</span>
-                          <Button size="sm" variant="outline" className="h-6 px-2 text-xs" onClick={() => cancelRun.mutate(r.id)} disabled={cancelRun.isPending && cancelRun.variables === r.id}>Cancel</Button>
-                        </div>
-                      )}
-                  </td>
-                  <td className="p-3 text-muted-foreground">{formatDistanceToNow(new Date(r.started_at), { addSuffix: true })}</td>
-                  <td className="p-3 tabular-nums">{r.items_processed ?? 0}</td>
-                  <td className="p-3 text-muted-foreground truncate max-w-md">{r.message ?? "—"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <Tabs value={runsTab} onValueChange={(v) => setRunsTab(v as any)}>
+            <div className="px-4 pt-4">
+              <TabsList>
+                <TabsTrigger value="all">All</TabsTrigger>
+                <TabsTrigger value="live">Live</TabsTrigger>
+                <TabsTrigger value="vod">Movies</TabsTrigger>
+                <TabsTrigger value="series">Series</TabsTrigger>
+              </TabsList>
+            </div>
+            {(() => {
+              const filtered = (data?.runs ?? []).filter((r: any) => runsTab === "all" ? true : r.type === runsTab).slice(0, 5);
+              return (
+                <table className="w-full text-sm mt-3">
+                  <thead className="text-xs text-muted-foreground bg-muted/50">
+                    <tr>
+                      <th className="text-left p-3 font-medium">Type</th>
+                      <th className="text-left p-3 font-medium">Status</th>
+                      <th className="text-left p-3 font-medium">Started</th>
+                      <th className="text-left p-3 font-medium">Items</th>
+                      <th className="text-left p-3 font-medium">Message</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {isLoading || !data ? (
+                      <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">Loading…</td></tr>
+                    ) : filtered.length === 0 ? (
+                      <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">No runs yet</td></tr>
+                    ) : filtered.map((r: any) => (
+                      <tr key={r.id} className="border-t border-border">
+                        <td className="p-3 font-mono text-xs">{r.type}</td>
+                        <td className="p-3">
+                          {r.status === "success" ? <span className="inline-flex items-center gap-1 text-emerald-400"><CheckCircle2 className="size-3.5" />success</span>
+                            : r.status === "error" ? <span className="inline-flex items-center gap-1 text-destructive"><XCircle className="size-3.5" />error</span>
+                            : (
+                              <div className="flex items-center gap-2">
+                                <span className="inline-flex items-center gap-1 text-primary"><Loader2 className="size-3.5 animate-spin" />running</span>
+                                <Button size="sm" variant="outline" className="h-6 px-2 text-xs" onClick={() => cancelRun.mutate(r.id)} disabled={cancelRun.isPending && cancelRun.variables === r.id}>Cancel</Button>
+                              </div>
+                            )}
+                        </td>
+                        <td className="p-3 text-muted-foreground">{formatDistanceToNow(new Date(r.started_at), { addSuffix: true })}</td>
+                        <td className="p-3 tabular-nums">{r.items_processed ?? 0}</td>
+                        <td className="p-3 text-muted-foreground truncate max-w-md">{r.message ?? "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              );
+            })()}
+          </Tabs>
         </CardContent>
       </Card>
+
 
       <Card>
         <CardHeader><CardTitle className="text-base">Recently added</CardTitle></CardHeader>

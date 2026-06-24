@@ -305,6 +305,8 @@ export const getRecentlyAdded = createServerFn({ method: "GET" })
       .object({
         type: z.enum(["live", "vod", "series"]),
         limit: z.number().int().min(1).max(200).optional(),
+        enabledOnly: z.boolean().optional(),
+        search: z.string().max(200).optional(),
       })
       .parse(d),
   )
@@ -313,25 +315,36 @@ export const getRecentlyAdded = createServerFn({ method: "GET" })
       | "live_streams"
       | "vod_streams"
       | "series";
-    const limit = data.limit ?? 50;
+    const limit = data.limit ?? 30;
     const iconCol = data.type === "series" ? "cover" : "stream_icon";
-    const { data: rows, error } = await supabaseAdmin
+
+    let catQ = supabaseAdmin.from("categories").select("upstream_id,name,enabled").eq("type", data.type);
+    if (data.enabledOnly) catQ = catQ.eq("enabled", true);
+    if (data.search && data.search.trim()) catQ = catQ.ilike("name", `%${data.search.trim()}%`);
+    const { data: cats, error: catErr } = await catQ;
+    if (catErr) throw new Error(catErr.message);
+    const catList = cats ?? [];
+    const filtering = !!data.enabledOnly || !!(data.search && data.search.trim());
+    if (filtering && catList.length === 0) return [];
+
+    let q = supabaseAdmin
       .from(table)
       .select(`id, upstream_id, name, category_id, ${iconCol}, created_at`)
       .order("created_at", { ascending: false })
       .limit(limit);
+    if (filtering) {
+      q = q.in("category_id", catList.map((c: any) => c.upstream_id));
+    }
+    const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
 
-    const catIds = [...new Set((rows ?? []).map((r: any) => r.category_id).filter((id: any): id is string => typeof id === "string" && id.length > 0))];
-    const { data: cats } = catIds.length
-      ? await supabaseAdmin.from("categories").select("upstream_id,name,enabled").eq("type", data.type).in("upstream_id", catIds)
-      : { data: [] as any[] };
-    const catMap = new Map((cats ?? []).map((c: any) => [c.upstream_id, c]));
+    const catMap = new Map(catList.map((c: any) => [c.upstream_id, c]));
     return (rows ?? []).map((r: any) => {
       const c = catMap.get(r.category_id) as any;
       return { ...r, stream_icon: r.stream_icon ?? r.cover ?? null, category_name: c?.name ?? r.category_id, category_enabled: c?.enabled ?? false };
     });
   });
+
 
 export const getContent = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
