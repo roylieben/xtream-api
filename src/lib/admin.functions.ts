@@ -323,10 +323,13 @@ export const getRecentlyAdded = createServerFn({ method: "GET" })
 
     const catIds = [...new Set((rows ?? []).map((r: any) => r.category_id).filter((id: any): id is string => typeof id === "string" && id.length > 0))];
     const { data: cats } = catIds.length
-      ? await supabaseAdmin.from("categories").select("upstream_id,name").eq("type", data.type).in("upstream_id", catIds)
+      ? await supabaseAdmin.from("categories").select("upstream_id,name,enabled").eq("type", data.type).in("upstream_id", catIds)
       : { data: [] as any[] };
-    const catMap = new Map((cats ?? []).map((c: any) => [c.upstream_id, c.name]));
-    return (rows ?? []).map((r: any) => ({ ...r, category_name: catMap.get(r.category_id) ?? r.category_id }));
+    const catMap = new Map((cats ?? []).map((c: any) => [c.upstream_id, c]));
+    return (rows ?? []).map((r: any) => {
+      const c = catMap.get(r.category_id) as any;
+      return { ...r, category_name: c?.name ?? r.category_id, category_enabled: c?.enabled ?? false };
+    });
   });
 
 export const getContent = createServerFn({ method: "GET" })
