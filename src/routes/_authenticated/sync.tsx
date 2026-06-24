@@ -90,7 +90,7 @@ function SyncPage() {
   const fetchStats = useServerFn(getStats);
   const qc = useQueryClient();
   const [tab, setTab] = useState<"live" | "vod" | "series">("live");
-  const [runsTab, setRunsTab] = useState<"all" | "live" | "vod" | "series">("all");
+  const [runsTab, setRunsTab] = useState<"live" | "vod" | "series">("live");
 
 
   const { data, isLoading } = useQuery({
