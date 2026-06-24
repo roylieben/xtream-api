@@ -329,7 +329,7 @@ export const getRecentlyAdded = createServerFn({ method: "GET" })
     const catMap = new Map((cats ?? []).map((c: any) => [c.upstream_id, c]));
     return (rows ?? []).map((r: any) => {
       const c = catMap.get(r.category_id) as any;
-      return { ...r, category_name: c?.name ?? r.category_id, category_enabled: c?.enabled ?? false };
+      return { ...r, stream_icon: r.stream_icon ?? r.cover ?? null, category_name: c?.name ?? r.category_id, category_enabled: c?.enabled ?? false };
     });
   });
 
