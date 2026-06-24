@@ -346,6 +346,45 @@ export const getRecentlyAdded = createServerFn({ method: "GET" })
     });
   });
 
+export const getMonthlyAdditions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async () => {
+    const now = new Date();
+    const months: { label: string; year: number; month: number; start: string; end: string }[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
+      const next = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1));
+      months.push({
+        label: d.toLocaleString("en-US", { month: "short", year: "numeric", timeZone: "UTC" }),
+        year: d.getUTCFullYear(),
+        month: d.getUTCMonth(),
+        start: d.toISOString(),
+        end: next.toISOString(),
+      });
+    }
+    const tables = ["live_streams", "vod_streams", "series"] as const;
+    const results = await Promise.all(
+      months.flatMap((m) =>
+        tables.map(async (t) => {
+          const { count } = await supabaseAdmin
+            .from(t)
+            .select("*", { count: "exact", head: true })
+            .gte("created_at", m.start)
+            .lt("created_at", m.end);
+          return { table: t, label: m.label, count: count ?? 0 };
+        }),
+      ),
+    );
+    return months.map((m) => ({
+      label: m.label,
+      live: results.find((r) => r.label === m.label && r.table === "live_streams")?.count ?? 0,
+      vod: results.find((r) => r.label === m.label && r.table === "vod_streams")?.count ?? 0,
+      series: results.find((r) => r.label === m.label && r.table === "series")?.count ?? 0,
+    }));
+  });
+
+
+
 
 export const getContent = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

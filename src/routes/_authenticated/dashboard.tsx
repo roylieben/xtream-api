@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getStats, runSync, testConnection, cancelSync } from "@/lib/admin.functions";
+import { getStats, runSync, testConnection, cancelSync, getMonthlyAdditions } from "@/lib/admin.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +40,13 @@ function Dashboard() {
     queryFn: () => fetchStats(),
     refetchInterval: 5000,
   });
+
+  const fetchMonthly = useServerFn(getMonthlyAdditions);
+  const { data: monthly } = useQuery({
+    queryKey: ["monthly-additions"],
+    queryFn: () => fetchMonthly(),
+  });
+
 
   const test = useMutation({
     mutationFn: () => doTest(),
@@ -167,6 +174,34 @@ function Dashboard() {
           </table>
         </CardContent>
       </Card>
+      <Card>
+        <CardHeader><CardTitle className="text-base">Recently added — last 6 months</CardTitle></CardHeader>
+        <CardContent className="p-0">
+          <table className="w-full text-sm">
+            <thead className="text-xs text-muted-foreground bg-muted/50">
+              <tr>
+                <th className="text-left p-3 font-medium">Month</th>
+                <th className="text-right p-3 font-medium">Live</th>
+                <th className="text-right p-3 font-medium">Movies</th>
+                <th className="text-right p-3 font-medium">Series</th>
+              </tr>
+            </thead>
+            <tbody>
+              {!monthly ? (
+                <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">Loading…</td></tr>
+              ) : monthly.map((m) => (
+                <tr key={m.label} className="border-t border-border">
+                  <td className="p-3">{m.label}</td>
+                  <td className="p-3 text-right tabular-nums">{m.live}</td>
+                  <td className="p-3 text-right tabular-nums">{m.vod}</td>
+                  <td className="p-3 text-right tabular-nums">{m.series}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
     </div>
   );
 }
+
