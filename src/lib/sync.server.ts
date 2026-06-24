@@ -132,9 +132,11 @@ export async function syncVod(opts: { withInfo?: boolean } = {}) {
   return logRun("vod", async (id) => {
     const s = await getSettingsRow();
     const c = credsFromSettings(s);
+    await reportProgress(id, 0, "Fetching categories…");
     const cats = await xtream.vodCategories(c);
     await checkCancelled(id);
     await upsertCategories("vod", cats);
+    await reportProgress(id, 0, `Fetched ${cats.length} categories, fetching VOD list…`);
     const list = await xtream.vodStreams(c);
     const rows = list.map((it: any) => ({
       upstream_id: String(it.stream_id),
@@ -149,10 +151,13 @@ export async function syncVod(opts: { withInfo?: boolean } = {}) {
       num: it.num ?? null,
       raw: it,
     }));
+    let done = 0;
     for (const part of chunks(rows, 500)) {
       await checkCancelled(id);
       const { error } = await supabaseAdmin.from("vod_streams").upsert(part, { onConflict: "upstream_id" });
       if (error) throw new Error(`vod_streams upsert: ${error.message}`);
+      done += part.length;
+      await reportProgress(id, done, `Upserting VOD ${done}/${rows.length}`);
     }
     let infoCount = 0;
     if (opts.withInfo) {
@@ -173,6 +178,7 @@ export async function syncVod(opts: { withInfo?: boolean } = {}) {
           await supabaseAdmin.from("vod_info").upsert(upserts, { onConflict: "vod_id" });
           infoCount += upserts.length;
         }
+        await reportProgress(id, done, `Fetching VOD info ${Math.min(i + conc, missing.length)}/${missing.length}`);
       }
     }
     await supabaseAdmin
