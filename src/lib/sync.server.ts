@@ -193,9 +193,11 @@ export async function syncSeries(opts: { withInfo?: boolean } = {}) {
   return logRun("series", async (id) => {
     const s = await getSettingsRow();
     const c = credsFromSettings(s);
+    await reportProgress(id, 0, "Fetching categories…");
     const cats = await xtream.seriesCategories(c);
     await checkCancelled(id);
     await upsertCategories("series", cats);
+    await reportProgress(id, 0, `Fetched ${cats.length} categories, fetching series list…`);
     const list = await xtream.series(c);
     const rows = list.map((it: any) => ({
       upstream_id: String(it.series_id),
@@ -212,10 +214,13 @@ export async function syncSeries(opts: { withInfo?: boolean } = {}) {
       num: it.num ?? null,
       raw: it,
     }));
+    let done = 0;
     for (const part of chunks(rows, 500)) {
       await checkCancelled(id);
       const { error } = await supabaseAdmin.from("series").upsert(part, { onConflict: "upstream_id" });
       if (error) throw new Error(`series upsert: ${error.message}`);
+      done += part.length;
+      await reportProgress(id, done, `Upserting series ${done}/${rows.length}`);
     }
     let infoCount = 0;
     if (opts.withInfo) {
@@ -244,6 +249,7 @@ export async function syncSeries(opts: { withInfo?: boolean } = {}) {
           await supabaseAdmin.from("series_info").upsert(upserts, { onConflict: "series_id" });
           infoCount += upserts.length;
         }
+        await reportProgress(id, done, `Fetching series info ${Math.min(i + conc, missing.length)}/${missing.length}`);
       }
     }
     await supabaseAdmin
