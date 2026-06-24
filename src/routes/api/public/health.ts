@@ -16,7 +16,7 @@ export const Route = createFileRoute("/api/public/health")({
             process.env.SUPABASE_PUBLISHABLE_KEY!,
             { auth: { persistSession: false, autoRefreshToken: false } },
           );
-          const { error } = await supabase.from("settings").select("id").limit(1);
+          const { error } = await supabase.from("app_settings").select("id").limit(1);
           if (error) throw error;
           checks.database = { ok: true, latencyMs: Date.now() - dbStart };
         } catch (e: any) {
