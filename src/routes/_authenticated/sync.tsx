@@ -20,6 +20,8 @@ function RecentlyAddedList({ type }: { type: "live" | "vod" | "series" }) {
   const fetchRecent = useServerFn(getRecentlyAdded);
   const [search, setSearch] = useState("");
   const [enabledOnly, setEnabledOnly] = useState(true);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   const { data, isLoading } = useQuery({
     queryKey: ["recently-added", type, search, enabledOnly],
@@ -27,13 +29,16 @@ function RecentlyAddedList({ type }: { type: "live" | "vod" | "series" }) {
   });
 
   const rows = data ?? [];
+  const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pageRows = rows.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
     <div className="p-4 space-y-3">
       <div className="flex items-center gap-4">
-        <Input placeholder="Search categories…" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-xs" />
+        <Input placeholder="Search categories…" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="max-w-xs" />
         <div className="flex items-center gap-2">
-          <Switch id={`enabled-only-${type}`} checked={enabledOnly} onCheckedChange={setEnabledOnly} />
+          <Switch id={`enabled-only-${type}`} checked={enabledOnly} onCheckedChange={(v) => { setEnabledOnly(v); setPage(1); }} />
           <label htmlFor={`enabled-only-${type}`} className="text-sm cursor-pointer">Show enabled only</label>
         </div>
       </div>
@@ -42,40 +47,50 @@ function RecentlyAddedList({ type }: { type: "live" | "vod" | "series" }) {
       ) : rows.length === 0 ? (
         <div className="p-6 text-center text-muted-foreground">Nothing here yet</div>
       ) : (
-        <table className="w-full text-sm">
-          <thead className="text-xs text-muted-foreground bg-muted/50">
-            <tr>
-              <th className="text-left p-3 font-medium">Name</th>
-              <th className="text-left p-3 font-medium">Category</th>
-              <th className="text-left p-3 font-medium">Added</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r: any) => (
-              <tr key={r.id} className="border-t border-border">
-                <td className="p-3">
-                  <div className="flex items-center gap-2">
-                    {r.stream_icon ? <img src={r.stream_icon} alt="" className="size-8 rounded object-cover bg-muted" /> : <div className="size-8 rounded bg-muted" />}
-                    <span className="font-medium truncate">{r.name ?? "—"}</span>
-                  </div>
-                </td>
-                <td className="p-3 text-muted-foreground">{r.category_name ?? "—"}</td>
-                <td className="p-3 text-muted-foreground">{r.created_at ? formatDistanceToNow(new Date(r.created_at), { addSuffix: true }) : "—"}</td>
+        <>
+          <table className="w-full text-sm">
+            <thead className="text-xs text-muted-foreground bg-muted/50">
+              <tr>
+                <th className="text-left p-3 font-medium">Name</th>
+                <th className="text-left p-3 font-medium">Category</th>
+                <th className="text-left p-3 font-medium">Added</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {pageRows.map((r: any) => (
+                <tr key={r.id} className="border-t border-border">
+                  <td className="p-3">
+                    <div className="flex items-center gap-2">
+                      {r.stream_icon ? <img src={r.stream_icon} alt="" className="size-8 rounded object-cover bg-muted" /> : <div className="size-8 rounded bg-muted" />}
+                      <span className="font-medium truncate">{r.name ?? "—"}</span>
+                    </div>
+                  </td>
+                  <td className="p-3 text-muted-foreground">{r.category_name ?? "—"}</td>
+                  <td className="p-3 text-muted-foreground">{r.created_at ? formatDistanceToNow(new Date(r.created_at), { addSuffix: true }) : "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="flex items-center justify-between pt-2">
+            <span className="text-xs text-muted-foreground">Page {currentPage} of {totalPages} · {rows.length} items</span>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" disabled={currentPage <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Previous</Button>
+              <Button size="sm" variant="outline" disabled={currentPage >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>Next</Button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
 }
 
 
+
 function SyncPage() {
   const fetchStats = useServerFn(getStats);
   const qc = useQueryClient();
   const [tab, setTab] = useState<"live" | "vod" | "series">("live");
-  const [runsTab, setRunsTab] = useState<"all" | "live" | "vod" | "series">("all");
+  const [runsTab, setRunsTab] = useState<"live" | "vod" | "series">("live");
 
 
   const { data, isLoading } = useQuery({
@@ -106,14 +121,14 @@ function SyncPage() {
           <Tabs value={runsTab} onValueChange={(v) => setRunsTab(v as any)}>
             <div className="px-4 pt-4">
               <TabsList>
-                <TabsTrigger value="all">All</TabsTrigger>
+                <TabsTrigger value="live">Live</TabsTrigger>
                 <TabsTrigger value="live">Live</TabsTrigger>
                 <TabsTrigger value="vod">Movies</TabsTrigger>
                 <TabsTrigger value="series">Series</TabsTrigger>
               </TabsList>
             </div>
             {(() => {
-              const filtered = (data?.runs ?? []).filter((r: any) => runsTab === "all" ? true : r.type === runsTab).slice(0, 5);
+              const filtered = (data?.runs ?? []).filter((r: any) => r.type === runsTab).slice(0, 5);
               return (
                 <table className="w-full text-sm mt-3">
                   <thead className="text-xs text-muted-foreground bg-muted/50">
