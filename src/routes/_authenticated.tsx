@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet, redirect, useRouter } from "@tanstack/re
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Settings, ListFilter, Database, LogOut, Radio, FolderPlus, Users } from "lucide-react";
+import { LayoutDashboard, Settings, ListFilter, Database, LogOut, Radio, FolderPlus, Users, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ServiceStatus } from "@/components/ServiceStatus";
 
