@@ -61,6 +61,9 @@ const intervalsSchema = z.object({
   sync_interval_live_minutes: z.number().int().min(5).max(10080),
   sync_interval_vod_minutes: z.number().int().min(5).max(10080),
   sync_interval_series_minutes: z.number().int().min(5).max(10080),
+  sync_auto_live: z.boolean(),
+  sync_auto_vod: z.boolean(),
+  sync_auto_series: z.boolean(),
 });
 
 const securitySchema = z.object({
