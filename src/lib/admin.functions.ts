@@ -283,19 +283,28 @@ export const getStats = createServerFn({ method: "GET" })
       const { count } = await supabaseAdmin.from(table).select("*", { count: "exact", head: true });
       return count ?? 0;
     };
-    const [live, vod, series, cats, runsRes, settings] = await Promise.all([
+    const catCount = async (type: "live" | "vod" | "series") => {
+      const { count } = await supabaseAdmin.from("categories").select("*", { count: "exact", head: true }).eq("type", type);
+      return count ?? 0;
+    };
+    const [live, vod, series, cats, catsLive, catsVod, catsSeries, runsRes, settings] = await Promise.all([
       counts("live_streams"),
       counts("vod_streams"),
       counts("series"),
       counts("categories"),
+      catCount("live"),
+      catCount("vod"),
+      catCount("series"),
       supabaseAdmin.from("sync_runs").select("*").order("started_at", { ascending: false }).limit(15),
       supabaseAdmin.from("app_settings").select("*").limit(1).single(),
     ]);
     return {
       counts: { live, vod, series, categories: cats },
+      categoriesByType: { live: catsLive, vod: catsVod, series: catsSeries },
       runs: runsRes.data ?? [],
       settings: settings.data,
     };
+
   });
 
 export const getRecentlyAdded = createServerFn({ method: "GET" })
