@@ -128,7 +128,7 @@ function SyncPage() {
               </TabsList>
             </div>
             {(() => {
-              const filtered = (data?.runs ?? []).filter((r: any) => runsTab === "all" ? true : r.type === runsTab).slice(0, 5);
+              const filtered = (data?.runs ?? []).filter((r: any) => r.type === runsTab).slice(0, 5);
               return (
                 <table className="w-full text-sm mt-3">
                   <thead className="text-xs text-muted-foreground bg-muted/50">
