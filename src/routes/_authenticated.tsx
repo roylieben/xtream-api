@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet, redirect, useRouter } from "@tanstack/re
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Settings, ListFilter, Database, LogOut, Radio, FolderPlus, Users } from "lucide-react";
+import { LayoutDashboard, Settings, ListFilter, Database, LogOut, Radio, FolderPlus, Users, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ServiceStatus } from "@/components/ServiceStatus";
 
@@ -58,6 +58,7 @@ function AuthLayout() {
         <nav className="flex flex-col gap-1">
           <NavLink to="/" icon={LayoutDashboard}>Dashboard</NavLink>
           <NavLink to="/settings" icon={Settings}>Settings</NavLink>
+          <NavLink to="/sync" icon={RefreshCw}>Sync</NavLink>
           <NavLink to="/categories" icon={ListFilter}>Categories</NavLink>
           <NavLink to="/custom-categories" icon={FolderPlus}>Custom Categories</NavLink>
           <NavLink to="/content" icon={Database}>Content</NavLink>

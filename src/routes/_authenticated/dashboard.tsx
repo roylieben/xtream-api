@@ -117,7 +117,7 @@ function Dashboard() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">Recent sync runs</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">Latest sync results</CardTitle></CardHeader>
         <CardContent className="p-0">
           <table className="w-full text-sm">
             <thead className="text-xs text-muted-foreground bg-muted/50">
@@ -130,26 +130,39 @@ function Dashboard() {
               </tr>
             </thead>
             <tbody>
-              {data.runs.length === 0 ? (
-                <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">No runs yet</td></tr>
-              ) : data.runs.map((r: any) => (
-                <tr key={r.id} className="border-t border-border">
-                  <td className="p-3 font-mono text-xs">{r.type}</td>
-                  <td className="p-3">
-                    {r.status === "success" ? <span className="inline-flex items-center gap-1 text-emerald-400"><CheckCircle2 className="size-3.5" />success</span>
-                      : r.status === "error" ? <span className="inline-flex items-center gap-1 text-destructive"><XCircle className="size-3.5" />error</span>
-                      : (
-                        <div className="flex items-center gap-2">
-                          <span className="inline-flex items-center gap-1 text-primary"><Loader2 className="size-3.5 animate-spin" />running</span>
-                          <Button size="sm" variant="outline" className="h-6 px-2 text-xs" onClick={() => cancelRun.mutate(r.id)} disabled={cancelRun.isPending && cancelRun.variables === r.id}>Cancel</Button>
-                        </div>
-                      )}
-                  </td>
-                  <td className="p-3 text-muted-foreground">{formatDistanceToNow(new Date(r.started_at), { addSuffix: true })}</td>
-                  <td className="p-3 tabular-nums">{r.items_processed ?? 0}</td>
-                  <td className="p-3 text-muted-foreground truncate max-w-md">{r.message ?? "—"}</td>
-                </tr>
-              ))}
+              {(() => {
+                const latest = (["live", "vod", "series"] as const).map((t) => ({
+                  type: t,
+                  run: data.runs.find((r: any) => r.type === t),
+                }));
+                if (latest.every((l) => !l.run)) {
+                  return <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">No runs yet</td></tr>;
+                }
+                return latest.map(({ type, run }) => (
+                  <tr key={type} className="border-t border-border">
+                    <td className="p-3 font-mono text-xs">{type}</td>
+                    {run ? (
+                      <>
+                        <td className="p-3">
+                          {run.status === "success" ? <span className="inline-flex items-center gap-1 text-emerald-400"><CheckCircle2 className="size-3.5" />success</span>
+                            : run.status === "error" ? <span className="inline-flex items-center gap-1 text-destructive"><XCircle className="size-3.5" />error</span>
+                            : (
+                              <div className="flex items-center gap-2">
+                                <span className="inline-flex items-center gap-1 text-primary"><Loader2 className="size-3.5 animate-spin" />running</span>
+                                <Button size="sm" variant="outline" className="h-6 px-2 text-xs" onClick={() => cancelRun.mutate(run.id)} disabled={cancelRun.isPending && cancelRun.variables === run.id}>Cancel</Button>
+                              </div>
+                            )}
+                        </td>
+                        <td className="p-3 text-muted-foreground">{run.started_at ? formatDistanceToNow(new Date(run.started_at), { addSuffix: true }) : "—"}</td>
+                        <td className="p-3 tabular-nums">{run.items_processed ?? 0}</td>
+                        <td className="p-3 text-muted-foreground truncate max-w-md">{run.message ?? "—"}</td>
+                      </>
+                    ) : (
+                      <td colSpan={4} className="p-3 text-muted-foreground">No runs yet</td>
+                    )}
+                  </tr>
+                ));
+              })()}
             </tbody>
           </table>
         </CardContent>

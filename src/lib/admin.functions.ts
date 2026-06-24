@@ -298,6 +298,37 @@ export const getStats = createServerFn({ method: "GET" })
     };
   });
 
+export const getRecentlyAdded = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        type: z.enum(["live", "vod", "series"]),
+        limit: z.number().int().min(1).max(200).optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    const table = (data.type === "live" ? "live_streams" : data.type === "vod" ? "vod_streams" : "series") as
+      | "live_streams"
+      | "vod_streams"
+      | "series";
+    const limit = data.limit ?? 50;
+    const { data: rows, error } = await supabaseAdmin
+      .from(table)
+      .select("id, upstream_id, name, category_id, stream_icon, created_at")
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (error) throw new Error(error.message);
+
+    const catIds = [...new Set((rows ?? []).map((r: any) => r.category_id).filter((id: any): id is string => typeof id === "string" && id.length > 0))];
+    const { data: cats } = catIds.length
+      ? await supabaseAdmin.from("categories").select("upstream_id,name").eq("type", data.type).in("upstream_id", catIds)
+      : { data: [] as any[] };
+    const catMap = new Map((cats ?? []).map((c: any) => [c.upstream_id, c.name]));
+    return (rows ?? []).map((r: any) => ({ ...r, category_name: catMap.get(r.category_id) ?? r.category_id }));
+  });
+
 export const getContent = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
