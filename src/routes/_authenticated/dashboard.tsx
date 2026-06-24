@@ -125,10 +125,8 @@ function Dashboard() {
                     {statusBadge}
                   </div>
                 </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Badge variant="outline">every {mins}m</Badge>
-                  <Badge variant="outline">{catsForType.toLocaleString()} categories</Badge>
-                  <Badge variant="outline">{streamsForType.toLocaleString()} streams</Badge>
+                <div className="text-xs text-muted-foreground">
+                  every {mins}m · {catsForType.toLocaleString()} categories · {streamsForType.toLocaleString()} streams
                 </div>
                 <div className="text-xs text-muted-foreground">Last: {lastSync(last as any)}</div>
                 {run?.message ? (
