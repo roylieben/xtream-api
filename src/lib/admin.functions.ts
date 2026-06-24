@@ -304,7 +304,7 @@ export const getRecentlyAdded = createServerFn({ method: "GET" })
     z
       .object({
         type: z.enum(["live", "vod", "series"]),
-        limit: z.number().int().min(1).max(200).optional(),
+        limit: z.number().int().min(1).optional(),
         enabledOnly: z.boolean().optional(),
         search: z.string().max(200).optional(),
       })
