@@ -315,7 +315,7 @@ export const getRecentlyAdded = createServerFn({ method: "GET" })
       | "live_streams"
       | "vod_streams"
       | "series";
-    const limit = data.limit ?? 30;
+    const limit = data.limit;
     const iconCol = data.type === "series" ? "cover" : "stream_icon";
 
     let catQ = supabaseAdmin.from("categories").select("upstream_id,name,enabled").eq("type", data.type);
