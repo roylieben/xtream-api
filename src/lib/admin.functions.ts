@@ -358,48 +358,49 @@ export const getRecentlyAdded = createServerFn({ method: "GET" })
 export const getMonthlyAdditions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async () => {
-    const tables = ["live_streams", "vod_streams", "series"] as const;
-    const earliestRes = await Promise.all(
-      tables.map((t) =>
-        supabaseAdmin.from(t).select("created_at").order("created_at", { ascending: true }).limit(1).maybeSingle(),
-      ),
-    );
-    const earliestDates = earliestRes
-      .map((r) => r.data?.created_at)
-      .filter((d): d is string => !!d)
-      .map((d) => new Date(d));
-    const earliest = earliestDates.length ? new Date(Math.min(...earliestDates.map((d) => d.getTime()))) : null;
-    const earliestMonth = earliest ? new Date(Date.UTC(earliest.getUTCFullYear(), earliest.getUTCMonth(), 1)) : null;
+    // Bucket by the upstream-provided timestamp, not the local `created_at`
+    // (which is when the row was first inserted into our DB and is therefore
+    // identical for every row added during the first sync of a given type).
+    const sources = [
+      { table: "live_streams" as const, key: "live" as const, col: "added" as const },
+      { table: "vod_streams" as const, key: "vod" as const, col: "added" as const },
+      { table: "series" as const, key: "series" as const, col: "last_modified" as const },
+    ];
 
     const now = new Date();
-    const months: { label: string; start: string; end: string }[] = [];
+    const months: { label: string; startSec: number; endSec: number }[] = [];
     for (let i = 0; i < 6; i++) {
       const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
-      if (earliestMonth && d.getTime() < earliestMonth.getTime()) break;
       const next = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1));
       months.push({
         label: d.toLocaleString("en-US", { month: "short", year: "numeric", timeZone: "UTC" }),
-        start: d.toISOString(),
-        end: next.toISOString(),
+        startSec: Math.floor(d.getTime() / 1000),
+        endSec: Math.floor(next.getTime() / 1000),
       });
     }
+
+    // Column is text holding a unix-seconds integer. Lexicographic compare
+    // works while all values are 10 digits (valid through year 2286).
+    const pad = (n: number) => String(n).padStart(10, "0");
+
     const results = await Promise.all(
       months.flatMap((m) =>
-        tables.map(async (t) => {
+        sources.map(async (s) => {
           const { count } = await supabaseAdmin
-            .from(t)
+            .from(s.table)
             .select("*", { count: "exact", head: true })
-            .gte("created_at", m.start)
-            .lt("created_at", m.end);
-          return { table: t, label: m.label, count: count ?? 0 };
+            .gte(s.col, pad(m.startSec))
+            .lt(s.col, pad(m.endSec));
+          return { key: s.key, label: m.label, count: count ?? 0 };
         }),
       ),
     );
+
     return months.map((m) => ({
       label: m.label,
-      live: results.find((r) => r.label === m.label && r.table === "live_streams")?.count ?? 0,
-      vod: results.find((r) => r.label === m.label && r.table === "vod_streams")?.count ?? 0,
-      series: results.find((r) => r.label === m.label && r.table === "series")?.count ?? 0,
+      live: results.find((r) => r.label === m.label && r.key === "live")?.count ?? 0,
+      vod: results.find((r) => r.label === m.label && r.key === "vod")?.count ?? 0,
+      series: results.find((r) => r.label === m.label && r.key === "series")?.count ?? 0,
     }));
   });
 
