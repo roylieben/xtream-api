@@ -295,7 +295,7 @@ export const getStats = createServerFn({ method: "GET" })
       catCount("live"),
       catCount("vod"),
       catCount("series"),
-      supabaseAdmin.from("sync_runs").select("*").order("started_at", { ascending: false }).limit(15),
+      supabaseAdmin.from("sync_runs").select("*").order("started_at", { ascending: false }).limit(30),
       supabaseAdmin.from("app_settings").select("*").limit(1).single(),
     ]);
     return {
