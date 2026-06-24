@@ -25,7 +25,7 @@ function RecentlyAddedList({ type }: { type: "live" | "vod" | "series" }) {
 
   const { data, isLoading } = useQuery({
     queryKey: ["recently-added", type, search, enabledOnly],
-    queryFn: () => fetchRecent({ data: { type, limit: 30, enabledOnly, search: search || undefined } }),
+    queryFn: () => fetchRecent({ data: { type, enabledOnly, search: search || undefined } }),
   });
 
   const rows = data ?? [];
@@ -122,7 +122,7 @@ function SyncPage() {
             <div className="px-4 pt-4">
               <TabsList>
                 <TabsTrigger value="live">Live</TabsTrigger>
-                <TabsTrigger value="live">Live</TabsTrigger>
+
                 <TabsTrigger value="vod">Movies</TabsTrigger>
                 <TabsTrigger value="series">Series</TabsTrigger>
               </TabsList>
@@ -178,7 +178,7 @@ function SyncPage() {
           <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
             <div className="px-4 pt-4">
               <TabsList>
-                <TabsTrigger value="live">Live channels</TabsTrigger>
+                <TabsTrigger value="live">Live</TabsTrigger>
                 <TabsTrigger value="vod">Movies</TabsTrigger>
                 <TabsTrigger value="series">Series</TabsTrigger>
               </TabsList>

@@ -304,7 +304,7 @@ export const getRecentlyAdded = createServerFn({ method: "GET" })
     z
       .object({
         type: z.enum(["live", "vod", "series"]),
-        limit: z.number().int().min(1).max(200).optional(),
+        limit: z.number().int().min(1).optional(),
         enabledOnly: z.boolean().optional(),
         search: z.string().max(200).optional(),
       })
@@ -315,7 +315,7 @@ export const getRecentlyAdded = createServerFn({ method: "GET" })
       | "live_streams"
       | "vod_streams"
       | "series";
-    const limit = data.limit ?? 30;
+    const limit = data.limit;
     const iconCol = data.type === "series" ? "cover" : "stream_icon";
 
     let catQ = supabaseAdmin.from("categories").select("upstream_id,name,enabled").eq("type", data.type);
@@ -330,8 +330,9 @@ export const getRecentlyAdded = createServerFn({ method: "GET" })
     let q = supabaseAdmin
       .from(table)
       .select(`id, upstream_id, name, category_id, ${iconCol}, created_at`)
-      .order("created_at", { ascending: false })
-      .limit(limit);
+      .order("created_at", { ascending: false });
+    if (limit !== undefined) q = q.limit(limit);
+
     if (filtering) {
       q = q.in("category_id", catList.map((c: any) => c.upstream_id));
     }
