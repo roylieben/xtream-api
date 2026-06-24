@@ -58,6 +58,7 @@ function AuthLayout() {
         <nav className="flex flex-col gap-1">
           <NavLink to="/" icon={LayoutDashboard}>Dashboard</NavLink>
           <NavLink to="/settings" icon={Settings}>Settings</NavLink>
+          <NavLink to="/sync" icon={RefreshCw}>Sync</NavLink>
           <NavLink to="/categories" icon={ListFilter}>Categories</NavLink>
           <NavLink to="/custom-categories" icon={FolderPlus}>Custom Categories</NavLink>
           <NavLink to="/content" icon={Database}>Content</NavLink>
