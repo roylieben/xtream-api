@@ -121,7 +121,7 @@ function SyncPage() {
           <Tabs value={runsTab} onValueChange={(v) => setRunsTab(v as any)}>
             <div className="px-4 pt-4">
               <TabsList>
-                <TabsTrigger value="all">All</TabsTrigger>
+                <TabsTrigger value="live">Live</TabsTrigger>
                 <TabsTrigger value="live">Live</TabsTrigger>
                 <TabsTrigger value="vod">Movies</TabsTrigger>
                 <TabsTrigger value="series">Series</TabsTrigger>
