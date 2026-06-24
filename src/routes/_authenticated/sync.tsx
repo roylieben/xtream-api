@@ -18,38 +18,59 @@ export const Route = createFileRoute("/_authenticated/sync")({
 
 function RecentlyAddedList({ type }: { type: "live" | "vod" | "series" }) {
   const fetchRecent = useServerFn(getRecentlyAdded);
+  const [search, setSearch] = useState("");
+  const [enabledOnly, setEnabledOnly] = useState(true);
+
   const { data, isLoading } = useQuery({
     queryKey: ["recently-added", type],
     queryFn: () => fetchRecent({ data: { type, limit: 50 } }),
   });
 
-  if (isLoading) return <div className="p-6 text-muted-foreground"><Loader2 className="inline size-4 animate-spin" /> Loading…</div>;
-  if (!data || data.length === 0) return <div className="p-6 text-center text-muted-foreground">Nothing here yet</div>;
+  const filtered = (data ?? []).filter((r: any) => {
+    if (enabledOnly && !r.category_enabled) return false;
+    if (search && !String(r.category_name ?? "").toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  });
 
   return (
-    <table className="w-full text-sm">
-      <thead className="text-xs text-muted-foreground bg-muted/50">
-        <tr>
-          <th className="text-left p-3 font-medium">Name</th>
-          <th className="text-left p-3 font-medium">Category</th>
-          <th className="text-left p-3 font-medium">Added</th>
-        </tr>
-      </thead>
-      <tbody>
-        {data.map((r: any) => (
-          <tr key={r.id} className="border-t border-border">
-            <td className="p-3">
-              <div className="flex items-center gap-2">
-                {r.stream_icon ? <img src={r.stream_icon} alt="" className="size-8 rounded object-cover bg-muted" /> : <div className="size-8 rounded bg-muted" />}
-                <span className="font-medium truncate">{r.name ?? "—"}</span>
-              </div>
-            </td>
-            <td className="p-3 text-muted-foreground">{r.category_name ?? "—"}</td>
-            <td className="p-3 text-muted-foreground">{r.created_at ? formatDistanceToNow(new Date(r.created_at), { addSuffix: true }) : "—"}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div className="p-4 space-y-3">
+      <div className="flex items-center gap-4">
+        <Input placeholder="Search categories…" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-xs" />
+        <div className="flex items-center gap-2">
+          <Switch id={`enabled-only-${type}`} checked={enabledOnly} onCheckedChange={setEnabledOnly} />
+          <label htmlFor={`enabled-only-${type}`} className="text-sm cursor-pointer">Show enabled only</label>
+        </div>
+      </div>
+      {isLoading ? (
+        <div className="p-6 text-muted-foreground"><Loader2 className="inline size-4 animate-spin" /> Loading…</div>
+      ) : filtered.length === 0 ? (
+        <div className="p-6 text-center text-muted-foreground">Nothing here yet</div>
+      ) : (
+        <table className="w-full text-sm">
+          <thead className="text-xs text-muted-foreground bg-muted/50">
+            <tr>
+              <th className="text-left p-3 font-medium">Name</th>
+              <th className="text-left p-3 font-medium">Category</th>
+              <th className="text-left p-3 font-medium">Added</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((r: any) => (
+              <tr key={r.id} className="border-t border-border">
+                <td className="p-3">
+                  <div className="flex items-center gap-2">
+                    {r.stream_icon ? <img src={r.stream_icon} alt="" className="size-8 rounded object-cover bg-muted" /> : <div className="size-8 rounded bg-muted" />}
+                    <span className="font-medium truncate">{r.name ?? "—"}</span>
+                  </div>
+                </td>
+                <td className="p-3 text-muted-foreground">{r.category_name ?? "—"}</td>
+                <td className="p-3 text-muted-foreground">{r.created_at ? formatDistanceToNow(new Date(r.created_at), { addSuffix: true }) : "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
   );
 }
 
