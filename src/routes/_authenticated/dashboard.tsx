@@ -110,24 +110,25 @@ function Dashboard() {
           ] as const).map(([key, label, last, mins]) => {
             const run = data.runs.find((r: any) => r.type === key);
             const status = run?.status as "success" | "error" | "running" | undefined;
-            const borderClass =
-              status === "success" ? "border-emerald-500/40"
-              : status === "error" ? "border-destructive/60"
-              : status === "running" ? "border-primary/50"
-              : "border-border";
             const statusBadge =
               status === "success" ? <span className="inline-flex items-center gap-1 text-emerald-400 text-xs"><CheckCircle2 className="size-3.5" />success</span>
               : status === "error" ? <span className="inline-flex items-center gap-1 text-destructive text-xs"><XCircle className="size-3.5" />error</span>
               : status === "running" ? <span className="inline-flex items-center gap-1 text-primary text-xs"><Loader2 className="size-3.5 animate-spin" />running</span>
               : <span className="text-xs text-muted-foreground">no runs</span>;
+            const catsForType = data.categoriesByType?.[key] ?? 0;
+            const streamsForType = data.counts[key];
             return (
-              <div key={key} className={`rounded-md border p-4 space-y-2 ${borderClass}`}>
+              <div key={key} className="rounded-md border border-border p-4 space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="font-medium">{label}</div>
                     {statusBadge}
                   </div>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
                   <Badge variant="outline">every {mins}m</Badge>
+                  <Badge variant="outline">{catsForType.toLocaleString()} categories</Badge>
+                  <Badge variant="outline">{streamsForType.toLocaleString()} streams</Badge>
                 </div>
                 <div className="text-xs text-muted-foreground">Last: {lastSync(last as any)}</div>
                 {run?.message ? (
@@ -146,6 +147,7 @@ function Dashboard() {
               </div>
             );
           })}
+
         </CardContent>
       </Card>
 
