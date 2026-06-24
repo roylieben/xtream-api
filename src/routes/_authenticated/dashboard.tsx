@@ -174,6 +174,34 @@ function Dashboard() {
           </table>
         </CardContent>
       </Card>
+      <Card>
+        <CardHeader><CardTitle className="text-base">Recently added — last 6 months</CardTitle></CardHeader>
+        <CardContent className="p-0">
+          <table className="w-full text-sm">
+            <thead className="text-xs text-muted-foreground bg-muted/50">
+              <tr>
+                <th className="text-left p-3 font-medium">Month</th>
+                <th className="text-right p-3 font-medium">Live</th>
+                <th className="text-right p-3 font-medium">Movies</th>
+                <th className="text-right p-3 font-medium">Series</th>
+              </tr>
+            </thead>
+            <tbody>
+              {!monthly ? (
+                <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">Loading…</td></tr>
+              ) : monthly.map((m) => (
+                <tr key={m.label} className="border-t border-border">
+                  <td className="p-3">{m.label}</td>
+                  <td className="p-3 text-right tabular-nums">{m.live}</td>
+                  <td className="p-3 text-right tabular-nums">{m.vod}</td>
+                  <td className="p-3 text-right tabular-nums">{m.series}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
     </div>
   );
 }
+
