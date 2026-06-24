@@ -330,8 +330,9 @@ export const getRecentlyAdded = createServerFn({ method: "GET" })
     let q = supabaseAdmin
       .from(table)
       .select(`id, upstream_id, name, category_id, ${iconCol}, created_at`)
-      .order("created_at", { ascending: false })
-      .limit(limit);
+      .order("created_at", { ascending: false });
+    if (limit !== undefined) q = q.limit(limit);
+
     if (filtering) {
       q = q.in("category_id", catList.map((c: any) => c.upstream_id));
     }
