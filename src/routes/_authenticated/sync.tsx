@@ -25,7 +25,7 @@ function RecentlyAddedList({ type }: { type: "live" | "vod" | "series" }) {
 
   const { data, isLoading } = useQuery({
     queryKey: ["recently-added", type, search, enabledOnly],
-    queryFn: () => fetchRecent({ data: { type, enabledOnly, search: search || undefined } }),
+    queryFn: () => fetchRecent({ data: { type, enabledOnly, search: search || undefined, limit: 200 } }),
   });
 
   const rows = data ?? [];
