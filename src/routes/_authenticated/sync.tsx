@@ -103,43 +103,59 @@ function SyncPage() {
       <Card>
         <CardHeader><CardTitle className="text-base">Recent sync runs</CardTitle></CardHeader>
         <CardContent className="p-0">
-          <table className="w-full text-sm">
-            <thead className="text-xs text-muted-foreground bg-muted/50">
-              <tr>
-                <th className="text-left p-3 font-medium">Type</th>
-                <th className="text-left p-3 font-medium">Status</th>
-                <th className="text-left p-3 font-medium">Started</th>
-                <th className="text-left p-3 font-medium">Items</th>
-                <th className="text-left p-3 font-medium">Message</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading || !data ? (
-                <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">Loading…</td></tr>
-              ) : data.runs.length === 0 ? (
-                <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">No runs yet</td></tr>
-              ) : data.runs.map((r: any) => (
-                <tr key={r.id} className="border-t border-border">
-                  <td className="p-3 font-mono text-xs">{r.type}</td>
-                  <td className="p-3">
-                    {r.status === "success" ? <span className="inline-flex items-center gap-1 text-emerald-400"><CheckCircle2 className="size-3.5" />success</span>
-                      : r.status === "error" ? <span className="inline-flex items-center gap-1 text-destructive"><XCircle className="size-3.5" />error</span>
-                      : (
-                        <div className="flex items-center gap-2">
-                          <span className="inline-flex items-center gap-1 text-primary"><Loader2 className="size-3.5 animate-spin" />running</span>
-                          <Button size="sm" variant="outline" className="h-6 px-2 text-xs" onClick={() => cancelRun.mutate(r.id)} disabled={cancelRun.isPending && cancelRun.variables === r.id}>Cancel</Button>
-                        </div>
-                      )}
-                  </td>
-                  <td className="p-3 text-muted-foreground">{formatDistanceToNow(new Date(r.started_at), { addSuffix: true })}</td>
-                  <td className="p-3 tabular-nums">{r.items_processed ?? 0}</td>
-                  <td className="p-3 text-muted-foreground truncate max-w-md">{r.message ?? "—"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <Tabs value={runsTab} onValueChange={(v) => setRunsTab(v as any)}>
+            <div className="px-4 pt-4">
+              <TabsList>
+                <TabsTrigger value="all">All</TabsTrigger>
+                <TabsTrigger value="live">Live</TabsTrigger>
+                <TabsTrigger value="vod">Movies</TabsTrigger>
+                <TabsTrigger value="series">Series</TabsTrigger>
+              </TabsList>
+            </div>
+            {(() => {
+              const filtered = (data?.runs ?? []).filter((r: any) => runsTab === "all" ? true : r.type === runsTab).slice(0, 5);
+              return (
+                <table className="w-full text-sm mt-3">
+                  <thead className="text-xs text-muted-foreground bg-muted/50">
+                    <tr>
+                      <th className="text-left p-3 font-medium">Type</th>
+                      <th className="text-left p-3 font-medium">Status</th>
+                      <th className="text-left p-3 font-medium">Started</th>
+                      <th className="text-left p-3 font-medium">Items</th>
+                      <th className="text-left p-3 font-medium">Message</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {isLoading || !data ? (
+                      <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">Loading…</td></tr>
+                    ) : filtered.length === 0 ? (
+                      <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">No runs yet</td></tr>
+                    ) : filtered.map((r: any) => (
+                      <tr key={r.id} className="border-t border-border">
+                        <td className="p-3 font-mono text-xs">{r.type}</td>
+                        <td className="p-3">
+                          {r.status === "success" ? <span className="inline-flex items-center gap-1 text-emerald-400"><CheckCircle2 className="size-3.5" />success</span>
+                            : r.status === "error" ? <span className="inline-flex items-center gap-1 text-destructive"><XCircle className="size-3.5" />error</span>
+                            : (
+                              <div className="flex items-center gap-2">
+                                <span className="inline-flex items-center gap-1 text-primary"><Loader2 className="size-3.5 animate-spin" />running</span>
+                                <Button size="sm" variant="outline" className="h-6 px-2 text-xs" onClick={() => cancelRun.mutate(r.id)} disabled={cancelRun.isPending && cancelRun.variables === r.id}>Cancel</Button>
+                              </div>
+                            )}
+                        </td>
+                        <td className="p-3 text-muted-foreground">{formatDistanceToNow(new Date(r.started_at), { addSuffix: true })}</td>
+                        <td className="p-3 tabular-nums">{r.items_processed ?? 0}</td>
+                        <td className="p-3 text-muted-foreground truncate max-w-md">{r.message ?? "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              );
+            })()}
+          </Tabs>
         </CardContent>
       </Card>
+
 
       <Card>
         <CardHeader><CardTitle className="text-base">Recently added</CardTitle></CardHeader>
