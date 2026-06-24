@@ -22,15 +22,11 @@ function RecentlyAddedList({ type }: { type: "live" | "vod" | "series" }) {
   const [enabledOnly, setEnabledOnly] = useState(true);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["recently-added", type],
-    queryFn: () => fetchRecent({ data: { type, limit: 50 } }),
+    queryKey: ["recently-added", type, search, enabledOnly],
+    queryFn: () => fetchRecent({ data: { type, limit: 30, enabledOnly, search: search || undefined } }),
   });
 
-  const filtered = (data ?? []).filter((r: any) => {
-    if (enabledOnly && !r.category_enabled) return false;
-    if (search && !String(r.category_name ?? "").toLowerCase().includes(search.toLowerCase())) return false;
-    return true;
-  });
+  const rows = data ?? [];
 
   return (
     <div className="p-4 space-y-3">
@@ -43,7 +39,7 @@ function RecentlyAddedList({ type }: { type: "live" | "vod" | "series" }) {
       </div>
       {isLoading ? (
         <div className="p-6 text-muted-foreground"><Loader2 className="inline size-4 animate-spin" /> Loading…</div>
-      ) : filtered.length === 0 ? (
+      ) : rows.length === 0 ? (
         <div className="p-6 text-center text-muted-foreground">Nothing here yet</div>
       ) : (
         <table className="w-full text-sm">
@@ -55,7 +51,7 @@ function RecentlyAddedList({ type }: { type: "live" | "vod" | "series" }) {
             </tr>
           </thead>
           <tbody>
-            {filtered.map((r: any) => (
+            {rows.map((r: any) => (
               <tr key={r.id} className="border-t border-border">
                 <td className="p-3">
                   <div className="flex items-center gap-2">
@@ -73,6 +69,7 @@ function RecentlyAddedList({ type }: { type: "live" | "vod" | "series" }) {
     </div>
   );
 }
+
 
 function SyncPage() {
   const fetchStats = useServerFn(getStats);
